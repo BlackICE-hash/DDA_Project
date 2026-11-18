@@ -79,26 +79,6 @@ struct Metrics {
         comparisons++;
         return a == b;
     }
-
-    // Static helper to query current process Resident Set Size (RSS) in bytes
-    static size_t queryCurrentRSS() {
-        size_t rssBytes = 0;
-        std::ifstream statusFile("/proc/self/status");
-        if (statusFile.is_open()) {
-            std::string line;
-            while (std::getline(statusFile, line)) {
-                if (line.rfind("VmRSS:", 0) == 0) {
-                    std::istringstream iss(line);
-                    std::string key;
-                    size_t kb = 0;
-                    iss >> key >> kb;
-                    rssBytes = kb * 1024;
-                    break;
-                }
-            }
-        }
-        return rssBytes;
-    }
 };
 
 } // namespace dls

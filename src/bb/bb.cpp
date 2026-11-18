@@ -135,21 +135,6 @@ SubsetSumResult solveSubsetSum(std::vector<int> numbers, int targetSum, Metrics&
 
 namespace {
 
-struct BBNode {
-    int level{-1};              // Level of node in decision tree (corresponds to item index)
-    int value{0};               // Total value accumulated so far
-    int weight{0};              // Total weight accumulated so far
-    double bound{0.0};          // Fractional upper bound
-    std::vector<int> takenIds;  // IDs of items taken in this state
-};
-
-// Comparator for Least-Cost BB: higher upper bound has higher priority
-struct LCBBComp {
-    bool operator()(const BBNode& a, const BBNode& b) const {
-        return a.bound > b.bound; // Max-heap behavior
-    }
-};
-
 // Calculate fractional upper bound for node u
 double calculateBound(const BBNode& u, int n, int W, const std::vector<Item>& sortedItems, Metrics& metrics) {
     if (u.weight >= W) return 0.0;
@@ -210,7 +195,7 @@ BBKnapsackResult knapsackBranchAndBound(const std::vector<Item>& items, int capa
 
     std::vector<BBNode> lifoStack;
 
-    MinHeap<BBNode, LCBBComp> lcHeap(LCBBComp(), &metrics);
+    BBMinHeap lcHeap(&metrics);
 
     if (strategy == BBStrategy::FIFO) {
         fifoQueue.push_back(root);

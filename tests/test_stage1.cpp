@@ -16,9 +16,7 @@ void testMetrics() {
     assert(m.countLess(10, 5) == false);
     assert(m.comparisons == 2);
     
-    size_t rss = dls::Metrics::queryCurrentRSS();
-    std::cout << "[PASS] testMetrics: elapsed=" << m.ms << "ms, comparisons=" << m.comparisons 
-              << ", RSS=" << rss << " bytes\n";
+    std::cout << "[PASS] testMetrics: elapsed=" << m.ms << "ms, comparisons=" << m.comparisons << "\n";
 }
 
 void testGenerator() {

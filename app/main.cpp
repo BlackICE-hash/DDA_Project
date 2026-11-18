@@ -24,10 +24,13 @@ void printHeader(const std::string& title) {
     std::cout << "======================================================================\n";
 }
 
-void printMetrics(const std::string& label, const Metrics& m) {
+void printMetrics(const std::string& label, const Metrics& m, const std::string& auxSpace = "") {
     std::cout << "  [" << label << "] Time: " << std::fixed << std::setprecision(4) << m.ms << " ms | "
-              << "Comparisons: " << m.comparisons << " | "
-              << "Peak RSS: " << (m.peakBytes > 0 ? m.peakBytes : Metrics::queryCurrentRSS()) / 1024 << " KB\n";
+              << "Comparisons: " << m.comparisons;
+    if (!auxSpace.empty()) {
+        std::cout << " | Aux space (theory): " << auxSpace;
+    }
+    std::cout << "\n";
 }
 
 // Scenarios implemented cleanly
@@ -44,8 +47,8 @@ void runScenario1_NormalOperation() {
     mergeSort(docs, mMerge, DocumentScoreDesc());
     quickSort(docsQuick, mQuick, DocumentScoreDesc());
 
-    printMetrics("MergeSort (Stable)", mMerge);
-    printMetrics("QuickSort (Median-of-3)", mQuick);
+    printMetrics("MergeSort (Stable)", mMerge, "O(n)");
+    printMetrics("QuickSort (Median-of-3)", mQuick, "O(log n) stack");
     std::cout << "  -> Top Ranked Book: [ID " << docs[0].id << "] \"" << docs[0].title
               << "\" (Score: " << docs[0].score << ")\n\n";
 
@@ -60,8 +63,8 @@ void runScenario1_NormalOperation() {
     int idx1 = binarySearchDocumentById(docsById, targetId, false, mSearchIter);
     int idx2 = binarySearchDocumentById(docsById, targetId, true, mSearchRec);
     (void)idx2; // verify both return same index
-    printMetrics("Binary Search (Iterative)", mSearchIter);
-    printMetrics("Binary Search (Recursive)", mSearchRec);
+    printMetrics("Binary Search (Iterative)", mSearchIter, "O(1)");
+    printMetrics("Binary Search (Recursive)", mSearchRec, "O(log n) stack");
     std::cout << "  -> Found at index " << idx1 << ": \"" << docsById[idx1].title << "\"\n\n";
 
     // 3. Peak reading-activity window (Max Subarray)
@@ -71,8 +74,8 @@ void runScenario1_NormalOperation() {
     auto subDC = maxSubarrayDivideAndConquer(activityLog, mSubDC);
     auto subKad = maxSubarrayKadane(activityLog, mSubKadane);
     (void)subKad; // verify consistency
-    printMetrics("Max Subarray (Divide & Conquer)", mSubDC);
-    printMetrics("Max Subarray (Kadane's Algorithm)", mSubKadane);
+    printMetrics("Max Subarray (Divide & Conquer)", mSubDC, "O(log n) stack");
+    printMetrics("Max Subarray (Kadane's Algorithm)", mSubKadane, "O(1)");
     std::cout << "  -> Peak Window: Hours [" << subDC.low << ".." << subDC.high 
               << "] with net visitor gain of +" << subDC.sum << "\n\n";
 
@@ -81,7 +84,7 @@ void runScenario1_NormalOperation() {
     auto celebMat = DataGenerator::generateCelebrityMatrix(20, 7);
     Metrics mCeleb;
     int celeb = findCelebrity(celebMat, mCeleb);
-    printMetrics("Celebrity Discovery O(n)", mCeleb);
+    printMetrics("Celebrity Discovery O(n)", mCeleb, "O(1)");
     std::cout << "  -> Authoritative Paper Found: ID " << celeb << "\n\n";
 
     // 5. Reading-Room Reservation & Room Partitioning
@@ -90,8 +93,8 @@ void runScenario1_NormalOperation() {
     Metrics mAct, mPart;
     auto selectedActs = selectActivities(intervals, mAct);
     auto partRes = partitionIntervals(intervals, mPart);
-    printMetrics("Activity Selection (Max Compatible Slots in 1 Room)", mAct);
-    printMetrics("Interval Partitioning (Min Rooms for ALL Slots)", mPart);
+    printMetrics("Activity Selection (Max Compatible Slots in 1 Room)", mAct, "O(n)");
+    printMetrics("Interval Partitioning (Min Rooms for ALL Slots)", mPart, "O(n)");
     std::cout << "  -> Max compatible slots in single room: " << selectedActs.size() << "\n";
     std::cout << "  -> Total rooms required to schedule all 30 groups: " << partRes.roomsUsed << "\n\n";
 
@@ -101,7 +104,7 @@ void runScenario1_NormalOperation() {
                                  "This library contains research manuscripts, conference proceedings, and textbooks.";
     Metrics mHuff;
     auto huffRes = huffmanEncode(sampleAbstract, mHuff);
-    printMetrics("Huffman Coding", mHuff);
+    printMetrics("Huffman Coding", mHuff, "O(k) tree");
     size_t rawBits = sampleAbstract.size() * 8;
     std::cout << "  -> Original: " << rawBits << " bits, Compressed: " << huffRes.encodedBits.size() 
               << " bits (Space Saved: " << std::fixed << std::setprecision(1) 
@@ -113,8 +116,8 @@ void runScenario1_NormalOperation() {
     Metrics mPrim, mKruskal;
     auto primRes = primMST(8, branchEdges, mPrim);
     auto kruskalRes = kruskalMST(8, branchEdges, mKruskal);
-    printMetrics("Prim's Algorithm (MinHeap)", mPrim);
-    printMetrics("Kruskal's Algorithm (Union-Find)", mKruskal);
+    printMetrics("Prim's Algorithm (MinHeap)", mPrim, "O(V + E)");
+    printMetrics("Kruskal's Algorithm (Union-Find)", mKruskal, "O(V + E)");
     std::cout << "  -> Minimum Connection Cost: " << primRes.totalWeight 
               << " units (Edges used: " << primRes.mstEdges.size() << ")\n\n";
 
@@ -125,8 +128,8 @@ void runScenario1_NormalOperation() {
     Metrics mKnapDP, mKnapLCBB;
     auto knapDP = knapsack01(items, budget, mKnapDP);
     auto knapLCBB = knapsackBranchAndBound(items, budget, BBStrategy::LeastCost, mKnapLCBB);
-    printMetrics("0/1 Knapsack (Dynamic Programming)", mKnapDP);
-    printMetrics("0/1 Knapsack (Least-Cost Branch & Bound)", mKnapLCBB);
+    printMetrics("0/1 Knapsack (Dynamic Programming)", mKnapDP, "O(nW)");
+    printMetrics("0/1 Knapsack (Least-Cost Branch & Bound)", mKnapLCBB, "O(2^n) queue");
     std::cout << "  -> Max Catalog Value Acquired: " << knapDP.maxValue 
               << " (Items chosen: " << knapDP.selectedItemIds.size() << ")\n\n";
 
@@ -142,7 +145,7 @@ void runScenario1_NormalOperation() {
     };
     Metrics mTSP;
     auto tspRes = tspBitmask(nStacks, stackDist, mTSP);
-    printMetrics("TSP (Bitmask DP O(n^2 * 2^n))", mTSP);
+    printMetrics("TSP (Bitmask DP O(n^2 * 2^n))", mTSP, "O(n * 2^n)");
     std::cout << "  -> Optimal Pickup Distance: " << tspRes.minCost << " meters | Route: ";
     for (size_t i = 0; i < tspRes.tour.size(); ++i) {
         std::cout << tspRes.tour[i] << (i + 1 < tspRes.tour.size() ? " -> " : "\n\n");
@@ -155,8 +158,8 @@ void runScenario1_NormalOperation() {
     Metrics mStrKMP, mStrRK;
     auto kmpMatches = matchKMP(text, pat, mStrKMP);
     auto rkMatches = matchRabinKarp(text, pat, mStrRK);
-    printMetrics("KMP String Matcher", mStrKMP);
-    printMetrics("Rabin-Karp String Matcher", mStrRK);
+    printMetrics("KMP String Matcher", mStrKMP, "O(m)");
+    printMetrics("Rabin-Karp String Matcher", mStrRK, "O(1)");
     std::cout << "  -> Found " << kmpMatches.size() << " matches at character indices: ";
     for (size_t idx : kmpMatches) std::cout << idx << " ";
     std::cout << "\n";
@@ -239,11 +242,13 @@ void runScenario3_StressTest() {
     mergeSort(docs, mMerge, DocumentScoreDesc());
     quickSort(docsQuick, mQuick, DocumentScoreDesc());
 
-    printMetrics("Merge Sort (O(n log n) Guaranteed)", mMerge);
-    printMetrics("Quick Sort (Median-of-3 In-Place)", mQuick);
+    printMetrics("Merge Sort (O(n log n) Guaranteed)", mMerge, "O(n)");
+    printMetrics("Quick Sort (Median-of-3 In-Place)", mQuick, "O(log n) stack");
     std::cout << "  -> Equivalence verified: " << (docs == docsQuick ? "YES (Identical order)" : "NO") << "\n";
     std::cout << "  -> Memory footprint: MergeSort allocated auxiliary buffer (" 
-              << (sizeof(Document) * N) / (1024 * 1024) << " MB), QuickSort ran in-place.\n\n";
+              << (sizeof(Document) * N) / (1024 * 1024) << " MB), QuickSort ran in-place.\n";
+    std::cout << "  -> QuickSort performance advantage is likely due to data movement and cache behaviour.\n";
+    std::cout << "     (Note: Merge Sort copies whole Document structs into its auxiliary buffer, while Quick Sort partitions in-place).\n\n";
 
     // Test 2: Binary Search Iterative vs Recursive on 100,000 items
     std::cout << "2. Searching in 100,000 Sorted Documents (Looking for Book ID 77777):\n";
@@ -256,8 +261,8 @@ void runScenario3_StressTest() {
     int foundRec = binarySearchDocumentById(docs, 77777, true, mRec);
     (void)foundRec;
 
-    printMetrics("Binary Search Iterative", mIter);
-    printMetrics("Binary Search Recursive", mRec);
+    printMetrics("Binary Search Iterative", mIter, "O(1)");
+    printMetrics("Binary Search Recursive", mRec, "O(log n) stack");
     std::cout << "  -> Result: ID 77777 found at index " << foundIter 
               << " (Title: \"" << docs[foundIter].title << "\")\n"
               << "  -> Both methods made exactly " << mIter.comparisons << " comparisons.\n\n";
@@ -272,12 +277,30 @@ void runScenario3_StressTest() {
     auto resRK = matchRabinKarp(text, pattern, mRK);
     auto resNaive = matchNaive(text, pattern, mNaive);
 
-    printMetrics("Naive String Matcher", mNaive);
-    printMetrics("Rabin-Karp Rolling Hash", mRK);
-    printMetrics("Knuth-Morris-Pratt (KMP)", mKMP);
-    std::cout << "  -> Naive comparisons: " << mNaive.comparisons << " vs KMP comparisons: " << mKMP.comparisons << "\n";
-    std::cout << "  -> KMP was " << std::fixed << std::setprecision(1) << (mNaive.ms / (mKMP.ms > 0 ? mKMP.ms : 0.001)) 
-              << "x faster than Naive on adversarial text.\n";
+    printMetrics("Naive String Matcher", mNaive, "O(1)");
+    printMetrics("Rabin-Karp Rolling Hash", mRK, "O(1)");
+    printMetrics("Knuth-Morris-Pratt (KMP)", mKMP, "O(m)");
+
+    std::cout << "  -> Comparisons & Time: Naive " << mNaive.comparisons << " comps ("
+              << std::fixed << std::setprecision(4) << mNaive.ms << " ms) vs KMP "
+              << mKMP.comparisons << " comps (" << mKMP.ms << " ms)\n";
+
+    double maxTime = std::max(mNaive.ms, mKMP.ms);
+    double minTime = std::min(mNaive.ms, mKMP.ms);
+    double timeDiffRatio = (maxTime > 0.0) ? (maxTime - minTime) / maxTime : 0.0;
+    double compRatio = (mKMP.comparisons > 0) ? (static_cast<double>(mNaive.comparisons) / mKMP.comparisons) : 1.0;
+
+    if (timeDiffRatio < 0.20) {
+        std::cout << "  -> On adversarial text: similar time, but " << std::fixed << std::setprecision(1)
+                  << compRatio << " times fewer comparisons with KMP.\n";
+    } else if (mKMP.ms < mNaive.ms) {
+        double speedup = (mKMP.ms > 0.0) ? (mNaive.ms / mKMP.ms) : 1.0;
+        std::cout << "  -> KMP was " << std::fixed << std::setprecision(1) << speedup 
+                  << "x faster than Naive (" << compRatio << " times fewer comparisons) on adversarial text.\n";
+    } else {
+        std::cout << "  -> KMP made " << std::fixed << std::setprecision(1) << compRatio 
+                  << " times fewer comparisons than Naive on adversarial text.\n";
+    }
 }
 
 void printMenu() {
@@ -342,7 +365,7 @@ int main(int argc, char* argv[]) {
                 auto docs = dls::DataGenerator::generateDocuments(50, 42);
                 dls::Metrics m;
                 dls::mergeSort(docs, m, dls::DocumentScoreDesc());
-                dls::printMetrics("MergeSort 50 Docs", m);
+                dls::printMetrics("MergeSort 50 Docs", m, "O(n)");
                 std::cout << "Top document: [ID " << docs[0].id << "] " << docs[0].title 
                           << " (Score: " << docs[0].score << ")\n";
                 break;
@@ -352,10 +375,10 @@ int main(int argc, char* argv[]) {
                 dls::Metrics mDC, mFast;
                 auto log = dls::DataGenerator::generateActivityLog(50, 42);
                 auto res = dls::maxSubarrayDivideAndConquer(log, mDC);
-                dls::printMetrics("Max Subarray D&C", mDC);
+                dls::printMetrics("Max Subarray D&C", mDC, "O(log n) stack");
                 std::cout << "Peak window sum: " << res.sum << "\n";
                 int64_t powRes = dls::fastPowerModular(3, 100, 1000000007, mFast);
-                dls::printMetrics("Fast Powering 3^100 mod 1e9+7", mFast);
+                dls::printMetrics("Fast Powering 3^100 mod 1e9+7", mFast, "O(1)");
                 std::cout << "Result: " << powRes << "\n";
                 break;
             }
@@ -364,7 +387,7 @@ int main(int argc, char* argv[]) {
                 dls::Metrics m;
                 std::string txt = "digital library system algorithms";
                 auto huff = dls::huffmanEncode(txt, m);
-                dls::printMetrics("Huffman Encoding", m);
+                dls::printMetrics("Huffman Encoding", m, "O(k) tree");
                 std::cout << "Raw: " << txt.size() * 8 << " bits, Encoded: " << huff.encodedBits.size() << " bits\n";
                 break;
             }
@@ -373,10 +396,10 @@ int main(int argc, char* argv[]) {
                 dls::Metrics mKnap, mLCS;
                 auto items = dls::DataGenerator::generateItems(10, 20, 50, 42);
                 auto knap = dls::knapsack01(items, 50, mKnap);
-                dls::printMetrics("0/1 Knapsack DP", mKnap);
+                dls::printMetrics("0/1 Knapsack DP", mKnap, "O(nW)");
                 std::cout << "Max value: " << knap.maxValue << "\n";
                 auto lcs = dls::longestCommonSubsequence("ALGORITHM", "LOGARITHM", mLCS);
-                dls::printMetrics("LCS (\"ALGORITHM\", \"LOGARITHM\")", mLCS);
+                dls::printMetrics("LCS (\"ALGORITHM\", \"LOGARITHM\")", mLCS, "O(mn)");
                 std::cout << "LCS: \"" << lcs.sequence << "\" (length " << lcs.length << ")\n";
                 break;
             }
@@ -384,10 +407,10 @@ int main(int argc, char* argv[]) {
                 dls::printHeader("Backtracking, Flow, CRT & Strings Demo");
                 dls::Metrics mQ, mFlow, mCRT;
                 auto nq = dls::solveNQueens(8, mQ);
-                dls::printMetrics("N-Queens (N=8)", mQ);
+                dls::printMetrics("N-Queens (N=8)", mQ, "O(N)");
                 std::cout << "Solutions: " << nq.totalSolutions << "\n";
                 auto crt = dls::solveCRT({2, 3, 2}, {3, 5, 7}, mCRT);
-                dls::printMetrics("CRT (2 mod 3, 3 mod 5, 2 mod 7)", mCRT);
+                dls::printMetrics("CRT (2 mod 3, 3 mod 5, 2 mod 7)", mCRT, "O(1)");
                 std::cout << "Solution: " << crt.solution << " mod " << crt.moduloProduct << "\n";
                 break;
             }

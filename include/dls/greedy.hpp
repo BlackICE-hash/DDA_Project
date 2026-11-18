@@ -64,20 +64,6 @@ PartitionResult partitionIntervals(std::vector<Interval> intervals, Metrics& met
 // 3. HUFFMAN CODING
 // ============================================================================
 
-struct HuffmanNode {
-    char ch{'\0'};
-    int freq{0};
-    HuffmanNode* left{nullptr};
-    HuffmanNode* right{nullptr};
-
-    HuffmanNode(char c, int f) : ch(c), freq(f) {}
-    HuffmanNode(int f, HuffmanNode* l, HuffmanNode* r) : freq(f), left(l), right(r) {}
-    ~HuffmanNode() {
-        delete left;
-        delete right;
-    }
-};
-
 struct HuffmanResult {
     std::string encodedBits;
     std::map<char, std::string> codebook;

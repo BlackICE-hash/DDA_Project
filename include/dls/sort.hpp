@@ -6,12 +6,6 @@
 
 namespace dls {
 
-/**
- * Comparator signature for sorting: returns true if a < b.
- */
-template <typename T>
-using Comparator = std::function<bool(const T&, const T&)>;
-
 // Default comparator using operator<
 template <typename T>
 struct DefaultLess {

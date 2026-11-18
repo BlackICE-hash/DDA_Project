@@ -20,7 +20,7 @@ struct BenchmarkRow {
     size_t inputSize;
     double timeMs;
     uint64_t comparisons;
-    size_t memoryBytes;
+    std::string auxSpaceTheory;
 };
 
 void runFullBenchmarks() {
@@ -40,8 +40,8 @@ void runFullBenchmarks() {
         mergeSort(docs1, mMerge, DocumentScoreDesc());
         quickSort(docs2, mQuick, DocumentScoreDesc());
 
-        rows.push_back({"Sort", "MergeSort", n, mMerge.ms, mMerge.comparisons, mMerge.peakBytes});
-        rows.push_back({"Sort", "QuickSort", n, mQuick.ms, mQuick.comparisons, Metrics::queryCurrentRSS()});
+        rows.push_back({"Sort", "MergeSort", n, mMerge.ms, mMerge.comparisons, "O(n)"});
+        rows.push_back({"Sort", "QuickSort", n, mQuick.ms, mQuick.comparisons, "O(log n) stack"});
 
         std::cout << "[Sort N=" << std::setw(6) << n << "] MergeSort: " << std::setw(8) << mMerge.ms 
                   << " ms (" << mMerge.comparisons << " comps) | QuickSort: " 
@@ -60,8 +60,8 @@ void runFullBenchmarks() {
         binarySearchDocumentById(docs, target, false, mIter);
         binarySearchDocumentById(docs, target, true, mRec);
 
-        rows.push_back({"Search", "BinarySearchIterative", n, mIter.ms, mIter.comparisons, 0});
-        rows.push_back({"Search", "BinarySearchRecursive", n, mRec.ms, mRec.comparisons, 0});
+        rows.push_back({"Search", "BinarySearchIterative", n, mIter.ms, mIter.comparisons, "O(1)"});
+        rows.push_back({"Search", "BinarySearchRecursive", n, mRec.ms, mRec.comparisons, "O(log n) stack"});
 
         std::cout << "\n[Search N=100000] Iterative: " << mIter.ms << " ms (" << mIter.comparisons 
                   << " comps) | Recursive: " << mRec.ms << " ms (" << mRec.comparisons << " comps)\n";
@@ -78,9 +78,9 @@ void runFullBenchmarks() {
         matchRabinKarp(text, pattern, mRK);
         matchNaive(text, pattern, mNaive);
 
-        rows.push_back({"StringMatch", "Naive", n, mNaive.ms, mNaive.comparisons, 0});
-        rows.push_back({"StringMatch", "RabinKarp", n, mRK.ms, mRK.comparisons, 0});
-        rows.push_back({"StringMatch", "KMP", n, mKMP.ms, mKMP.comparisons, 0});
+        rows.push_back({"StringMatch", "Naive", n, mNaive.ms, mNaive.comparisons, "O(1)"});
+        rows.push_back({"StringMatch", "RabinKarp", n, mRK.ms, mRK.comparisons, "O(1)"});
+        rows.push_back({"StringMatch", "KMP", n, mKMP.ms, mKMP.comparisons, "O(m)"});
 
         std::cout << "\n[StringMatch N=100000] Naive: " << mNaive.ms << " ms (" << mNaive.comparisons 
                   << " comps) | KMP: " << mKMP.ms << " ms (" << mKMP.comparisons 
@@ -97,8 +97,8 @@ void runFullBenchmarks() {
         auto pRes = primMST(v, graph, mPrim);
         auto kRes = kruskalMST(v, graph, mKruskal);
 
-        rows.push_back({"MST", "Prim", static_cast<size_t>(v), mPrim.ms, mPrim.comparisons, 0});
-        rows.push_back({"MST", "Kruskal", static_cast<size_t>(v), mKruskal.ms, mKruskal.comparisons, 0});
+        rows.push_back({"MST", "Prim", static_cast<size_t>(v), mPrim.ms, mPrim.comparisons, "O(V + E)"});
+        rows.push_back({"MST", "Kruskal", static_cast<size_t>(v), mKruskal.ms, mKruskal.comparisons, "O(V + E)"});
 
         std::cout << "\n[MST V=50, E=300] Prim: " << mPrim.ms << " ms (Weight: " << pRes.totalWeight 
                   << ") | Kruskal: " << mKruskal.ms << " ms (Weight: " << kRes.totalWeight << ")\n";
@@ -114,9 +114,9 @@ void runFullBenchmarks() {
         auto lcbbRes = knapsackBranchAndBound(items, cap, BBStrategy::LeastCost, mLCBB);
         auto fifoRes = knapsackBranchAndBound(items, cap, BBStrategy::FIFO, mFIFO);
 
-        rows.push_back({"Knapsack", "DP", 20, mDP.ms, mDP.comparisons, 0});
-        rows.push_back({"Knapsack", "LCBB", 20, mLCBB.ms, mLCBB.comparisons, 0});
-        rows.push_back({"Knapsack", "FIFO-BB", 20, mFIFO.ms, mFIFO.comparisons, 0});
+        rows.push_back({"Knapsack", "DP", 20, mDP.ms, mDP.comparisons, "O(nW)"});
+        rows.push_back({"Knapsack", "LCBB", 20, mLCBB.ms, mLCBB.comparisons, "O(2^n) queue"});
+        rows.push_back({"Knapsack", "FIFO-BB", 20, mFIFO.ms, mFIFO.comparisons, "O(2^n) queue"});
 
         std::cout << "\n[Knapsack N=20, W=60] DP: " << mDP.ms << " ms (Val: " << dpRes.maxValue 
                   << ") | LCBB: " << mLCBB.ms << " ms (Nodes: " << lcbbRes.nodesExplored 
@@ -126,10 +126,10 @@ void runFullBenchmarks() {
     // Export benchmark CSV
     std::ofstream out("data/benchmark_results.csv");
     if (out.is_open()) {
-        out << "category,algorithm,input_size,time_ms,comparisons,memory_bytes\n";
+        out << "category,algorithm,input_size,time_ms,comparisons,aux_space_theory\n";
         for (const auto& r : rows) {
             out << r.category << "," << r.algorithm << "," << r.inputSize << ","
-                << r.timeMs << "," << r.comparisons << "," << r.memoryBytes << "\n";
+                << r.timeMs << "," << r.comparisons << "," << r.auxSpaceTheory << "\n";
         }
         std::cout << "\nSuccessfully exported benchmark metrics to data/benchmark_results.csv\n";
     }

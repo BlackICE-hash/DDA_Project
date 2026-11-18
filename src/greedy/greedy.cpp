@@ -46,21 +46,6 @@ std::vector<Interval> selectActivities(std::vector<Interval> activities, Metrics
 // 2. INTERVAL PARTITIONING
 // ============================================================================
 
-namespace {
-
-// Room state in MinHeap: tracks (finishTime, roomId)
-struct RoomState {
-    int finishTime;
-    int roomId;
-
-    bool operator<(const RoomState& other) const {
-        if (finishTime != other.finishTime) return finishTime < other.finishTime;
-        return roomId < other.roomId;
-    }
-};
-
-} // anonymous namespace
-
 PartitionResult partitionIntervals(std::vector<Interval> intervals, Metrics& metrics) {
     if (intervals.empty()) return {0, {}};
 
@@ -72,8 +57,8 @@ PartitionResult partitionIntervals(std::vector<Interval> intervals, Metrics& met
         return a.finish < b.finish;
     });
 
-    // Custom MinHeap to store active rooms ordered by earliest finish time
-    MinHeap<RoomState> roomHeap(std::less<RoomState>(), &metrics);
+    // Custom non-template RoomMinHeap to store active rooms ordered by earliest finish time
+    RoomMinHeap roomHeap(&metrics);
     int nextRoomId = 1;
     PartitionResult result;
     result.assignment.reserve(intervals.size());
@@ -111,13 +96,6 @@ PartitionResult partitionIntervals(std::vector<Interval> intervals, Metrics& met
 
 namespace {
 
-// Custom comparator for HuffmanNode pointers in MinHeap
-struct HuffmanNodePtrComp {
-    bool operator()(const HuffmanNode* a, const HuffmanNode* b) const {
-        return a->freq < b->freq;
-    }
-};
-
 void buildCodebook(const HuffmanNode* node, const std::string& prefix, std::map<char, std::string>& codebook) {
     if (!node) return;
 
@@ -148,8 +126,8 @@ HuffmanResult huffmanEncode(const std::string& text, Metrics& metrics) {
         freqMap[c]++;
     }
 
-    // Step 2: Populate MinHeap with initial single-character leaf nodes
-    MinHeap<HuffmanNode*, HuffmanNodePtrComp> heap(HuffmanNodePtrComp(), &metrics);
+    // Step 2: Populate HuffmanMinHeap with initial single-character leaf nodes
+    HuffmanMinHeap heap(&metrics);
     for (const auto& pair : freqMap) {
         heap.push(new HuffmanNode(pair.first, pair.second));
     }
@@ -225,19 +203,6 @@ std::string huffmanDecode(const std::string& bits, const HuffmanNode* root, Metr
 // 4. DIJKSTRA'S ALGORITHM
 // ============================================================================
 
-namespace {
-
-struct DistPair {
-    int64_t dist;
-    int u;
-
-    bool operator<(const DistPair& other) const {
-        return dist < other.dist;
-    }
-};
-
-} // anonymous namespace
-
 DijkstraResult dijkstraShortestPath(int numVertices, const std::vector<Edge>& edges, int source, Metrics& metrics) {
     metrics.startTimer();
 
@@ -253,8 +218,8 @@ DijkstraResult dijkstraShortestPath(int numVertices, const std::vector<Edge>& ed
     std::vector<int> pred(numVertices, -1);
     dist[source] = 0;
 
-    // Step 3: Custom MinHeap for priority queue
-    MinHeap<DistPair> pq(std::less<DistPair>(), &metrics);
+    // Step 3: Custom non-template DistMinHeap for priority queue
+    DistMinHeap pq(&metrics);
     pq.push({0, source});
 
     while (!pq.empty()) {
@@ -306,8 +271,8 @@ MSTResult primMST(int numVertices, const std::vector<Edge>& edges, Metrics& metr
     std::vector<int> parent(numVertices, -1);
     std::vector<bool> inMST(numVertices, false);
 
-    // Custom MinHeap storing (key, vertex)
-    MinHeap<DistPair> pq(std::less<DistPair>(), &metrics);
+    // Custom non-template DistMinHeap storing (key, vertex)
+    DistMinHeap pq(&metrics);
 
     // Start with root vertex 0
     key[0] = 0;
