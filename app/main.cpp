@@ -476,6 +476,11 @@ void runLibraryDesk() {
 
         // Input validation: keep asking if the user enters something invalid
         if (!(std::cin >> deskChoice)) {
+            // Check if end of input (Ctrl+D / EOF) was reached
+            if (std::cin.eof()) {
+                std::cout << "Input ended. Returning.\n";
+                return;
+            }
             std::cin.clear();
             std::cin.ignore(10000, '\n');
             std::cout << "Please enter a number 0-4.\n";
@@ -496,6 +501,10 @@ void runLibraryDesk() {
             std::cout << "\nEnter a search word: ";
             std::string word;
             std::getline(std::cin, word);
+            if (std::cin.eof()) {
+                std::cout << "Input ended. Returning.\n";
+                return;
+            }
 
             // Validate: empty word is not allowed
             if (word.empty()) {
@@ -546,6 +555,10 @@ void runLibraryDesk() {
 
             // Validate that the user typed a number
             if (!(std::cin >> findId)) {
+                if (std::cin.eof()) {
+                    std::cout << "Input ended. Returning.\n";
+                    return;
+                }
                 std::cin.clear();
                 std::cin.ignore(10000, '\n');
                 std::cout << "Please enter a valid integer ID.\n";
@@ -589,6 +602,10 @@ void runLibraryDesk() {
 
             // Validate that the user typed a number in range
             if (!(std::cin >> topN)) {
+                if (std::cin.eof()) {
+                    std::cout << "Input ended. Returning.\n";
+                    return;
+                }
                 std::cin.clear();
                 std::cin.ignore(10000, '\n');
                 std::cout << "Please enter a number between 1 and 50.\n";
@@ -621,6 +638,10 @@ void runLibraryDesk() {
 
             // Validate input
             if (!(std::cin >> recId)) {
+                if (std::cin.eof()) {
+                    std::cout << "Input ended. Returning.\n";
+                    return;
+                }
                 std::cin.clear();
                 std::cin.ignore(10000, '\n');
                 std::cout << "Please enter a valid integer ID.\n";
@@ -734,8 +755,9 @@ void printMenu() {
 
 // WHAT:    Main application entry point handling CLI arguments and menu dispatch
 // IDEA:    Parses argc/argv:
-//          - If "--all" or "--demo", executes scenarios 1, 2, and 3 sequentially and terminates.
-//          - If "--scenario N", executes scenario N and terminates.
+//          - If "--all", executes scenarios 1, 2, and 3 sequentially and terminates.
+//          - If "--scenario" followed by single digit "1", "2", or "3", executes that scenario.
+//          - Any other command-line arguments print usage instructions and exit with code 1.
 //          - If no arguments, enters a while-loop displaying printMenu() and dispatching user choices.
 // EXAMPLE: ./build/dls_app --scenario 1 -> runs scenario 1 and exits
 // TIME:    Determined by selected scenario or options
@@ -745,24 +767,35 @@ void printMenu() {
 int main(int argc, char* argv[]) {
     // Check command line arguments for non-interactive execution
     if (argc > 1) {
-        std::string arg = argv[1];
-        if (arg == "--all" || arg == "--demo") {
+        if (argc == 2 && std::string(argv[1]) == "--all") {
             dls::runScenario1_NormalOperation();
             dls::runScenario2_ConstraintShock();
             dls::runScenario3_StressTest();
             return 0;
-        } else if (arg == "--scenario" && argc > 2) {
-            int s = std::stoi(argv[2]);
-            if (s == 1) dls::runScenario1_NormalOperation();
-            else if (s == 2) dls::runScenario2_ConstraintShock();
-            else if (s == 3) dls::runScenario3_StressTest();
-            return 0;
         }
+        if (argc == 3 && std::string(argv[1]) == "--scenario") {
+            std::string s = argv[2];
+            if (s == "1") {
+                dls::runScenario1_NormalOperation();
+                return 0;
+            } else if (s == "2") {
+                dls::runScenario2_ConstraintShock();
+                return 0;
+            } else if (s == "3") {
+                dls::runScenario3_StressTest();
+                return 0;
+            }
+        }
+        std::cout << "Usage: dls_app [--all | --scenario 1|2|3]\n";
+        return 1;
     }
 
     std::cout << "Welcome to the Digital Library Search and Recommendation Engine!\n";
     int choice = -1;
     while (choice != 0) {
+        if (std::cin.eof()) {
+            break;
+        }
         dls::printMenu();
         if (!(std::cin >> choice)) {
             if (std::cin.eof()) {
