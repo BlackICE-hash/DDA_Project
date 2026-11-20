@@ -3,15 +3,21 @@
 #include <climits>
 #include <queue> // NOT used, we use dls::MinHeap!
 
+// NOTE: This file implements Greedy algorithms for digital library management.
+// A "Greedy algorithm" always makes the best immediate choice at each step without backtracking.
+
 namespace dls {
 
 // ============================================================================
 // 1. ACTIVITY SELECTION
 // ============================================================================
 
-/**
- * @brief Activity Selection implementation.
- */
+// WHAT:    Selects the maximum count of non-overlapping study activities for a single room.
+// IDEA:    Sorts activities by earliest finish time. Greedily takes each activity whose start time
+//          is >= the finish time of the last scheduled activity.
+// EXAMPLE: Activities with intervals (1-4), (3-5), (0-6), (5-7) -> picks (1-4) and (5-7) (2 total)
+// TIME:    best O(n log n) / avg O(n log n) / worst O(n log n)      SPACE: O(n)
+// VIVA:    Sorting by earliest finish time leaves the maximum possible free time for subsequent activities.
 std::vector<Interval> selectActivities(std::vector<Interval> activities, Metrics& metrics) {
     if (activities.empty()) return {};
 
@@ -46,6 +52,12 @@ std::vector<Interval> selectActivities(std::vector<Interval> activities, Metrics
 // 2. INTERVAL PARTITIONING
 // ============================================================================
 
+// WHAT:    Schedules all study groups using the minimum possible number of conference rooms.
+// IDEA:    Sorts intervals by start time. Uses RoomMinHeap to track room availability;
+//          reuses earliest-finishing room if free, otherwise allocates a new room.
+// EXAMPLE: 30 overlapping study groups -> scheduled across exactly 5 rooms without conflict
+// TIME:    best O(n log n) / avg O(n log n) / worst O(n log n)      SPACE: O(n)
+// VIVA:    Min-heap stores active rooms; the peak heap size equals the theoretical minimum rooms needed.
 PartitionResult partitionIntervals(std::vector<Interval> intervals, Metrics& metrics) {
     if (intervals.empty()) return {0, {}};
 
@@ -96,6 +108,12 @@ PartitionResult partitionIntervals(std::vector<Interval> intervals, Metrics& met
 
 namespace {
 
+// WHAT:    Recursive DFS helper that traverses a Huffman tree to generate prefix bitstrings.
+// IDEA:    Traverses left branch appending '0', right branch appending '1'.
+//          When a leaf is reached, records codebook[node->ch] = prefix.
+// EXAMPLE: Leaf 'A' at path left-right -> codebook['A'] = "01"
+// TIME:    best O(k) / avg O(k) / worst O(k) where k is unique characters      SPACE: O(k) recursion stack
+// VIVA:    Assigns shorter bitstrings to shallower leaves, giving frequent letters shorter codes.
 void buildCodebook(const HuffmanNode* node, const std::string& prefix, std::map<char, std::string>& codebook) {
     if (!node) return;
 
@@ -113,6 +131,12 @@ void buildCodebook(const HuffmanNode* node, const std::string& prefix, std::map<
 
 } // anonymous namespace
 
+// WHAT:    Compresses text abstracts into variable-length prefix-free bit sequences.
+// IDEA:    Builds frequency map, puts leaf nodes into HuffmanMinHeap, and repeatedly merges
+//          the two lowest-frequency trees until a single tree root remains.
+// EXAMPLE: "ABRACADABRA" -> compresses 88 bits down to 28 bits (68% savings)
+// TIME:    best O(k log k) / avg O(k log k) / worst O(k log k)      SPACE: O(k)
+// VIVA:    The two smallest frequencies are always combined first, minimizing total weighted tree depth.
 HuffmanResult huffmanEncode(const std::string& text, Metrics& metrics) {
     if (text.empty()) {
         return {"", {}, nullptr, ""};
@@ -169,6 +193,12 @@ HuffmanResult huffmanEncode(const std::string& text, Metrics& metrics) {
     return result;
 }
 
+// WHAT:    Decodes a compressed binary bitstring back into original text using the Huffman tree.
+// IDEA:    Starts at root, moving left on '0' and right on '1'.
+//          When a leaf is hit, appends its character to output and restarts at root.
+// EXAMPLE: bits "0100" with tree -> decodes to "AB"
+// TIME:    best O(b) / avg O(b) / worst O(b) where b is number of bits      SPACE: O(1)
+// VIVA:    No lookahead needed: because it is a prefix-free code, hitting a leaf uniquely determines the character.
 std::string huffmanDecode(const std::string& bits, const HuffmanNode* root, Metrics& metrics) {
     if (!root || bits.empty()) return "";
 
@@ -203,6 +233,12 @@ std::string huffmanDecode(const std::string& bits, const HuffmanNode* root, Metr
 // 4. DIJKSTRA'S ALGORITHM
 // ============================================================================
 
+// WHAT:    Computes shortest transit delivery paths from a source library hub to all branches.
+// IDEA:    Maintains distance table initialized to INF. Uses DistMinHeap to extract the unvisited
+//          vertex with minimum tentative distance and relaxes its outgoing edges.
+// EXAMPLE: Source 0 with 4 branches -> distances [0, 10, 25, 30]
+// TIME:    best O((V + E) log V) / avg O((V + E) log V) / worst O((V + E) log V)      SPACE: O(V + E)
+// VIVA:    Checking 'd > dist[u]' skips outdated heap entries, implementing lazy deletion.
 DijkstraResult dijkstraShortestPath(int numVertices, const std::vector<Edge>& edges, int source, Metrics& metrics) {
     metrics.startTimer();
 
@@ -254,6 +290,12 @@ DijkstraResult dijkstraShortestPath(int numVertices, const std::vector<Edge>& ed
 // 5. PRIM'S ALGORITHM
 // ============================================================================
 
+// WHAT:    Finds Minimum Spanning Tree connecting all branches using Prim's algorithm.
+// IDEA:    Grows MST from vertex 0 using DistMinHeap to greedily select the lightest edge
+//          connecting a tree vertex to an unvisited vertex.
+// EXAMPLE: 8 library branches -> connects all 8 with 7 transit links at total cost 99
+// TIME:    best O((V + E) log V) / avg O((V + E) log V) / worst O((V + E) log V)      SPACE: O(V + E)
+// VIVA:    Maintains 'inMST' array to ensure visited vertices are never added to the tree twice.
 MSTResult primMST(int numVertices, const std::vector<Edge>& edges, Metrics& metrics) {
     if (numVertices == 0) return {0, {}, true};
 
@@ -319,6 +361,12 @@ MSTResult primMST(int numVertices, const std::vector<Edge>& edges, Metrics& metr
 // 6. KRUSKAL'S ALGORITHM
 // ============================================================================
 
+// WHAT:    Computes Minimum Spanning Tree using Kruskal's edge sorting and Union-Find algorithm.
+// IDEA:    Sorts edges by weight ascending. Iterates through edges; adds edge (u, v) to MST
+//          if and only if DisjointSet::unite(u, v) succeeds (detects and avoids cycles).
+// EXAMPLE: 8 library branches -> selects 7 lightest non-cyclical edges with total cost 99
+// TIME:    best O(E log E) / avg O(E log E) / worst O(E log E)      SPACE: O(V + E)
+// VIVA:    Early exit stops immediately when V-1 edges have been added to the MST.
 MSTResult kruskalMST(int numVertices, std::vector<Edge> edges, Metrics& metrics) {
     if (numVertices == 0) return {0, {}, true};
 

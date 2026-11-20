@@ -5,6 +5,9 @@
 #include <vector>
 #include <cstdint>
 
+// NOTE: "enum class BBStrategy" is an enum list providing three search strategies:
+// FIFO (breadth-first queue), LIFO (depth-first stack), and LeastCost (priority queue with greedy bounds).
+
 namespace dls {
 
 // ============================================================================
@@ -17,22 +20,12 @@ struct NQueensResult {
     std::vector<std::vector<int>> solutions;
 };
 
-/**
- * @brief N-Queens Problem via Backtracking.
- * 
- * IDEA:
- * Places queens row-by-row, verifying no column or diagonal conflicts.
- * Backtracks when no column in the current row is safe.
- * 
- * TIME COMPLEXITY:
- * O(N!).
- * 
- * SPACE COMPLEXITY:
- * O(N) auxiliary space.
- * 
- * WHEN IT FAILS:
- * No solutions exist for N = 2 and N = 3.
- */
+// WHAT:    Places N non-attacking library security sensors on an N x N archival vault grid.
+// IDEA:    Places sensors row-by-row, testing that no column or diagonal is shared.
+//          Backtracks immediately upon conflict to avoid searching invalid board configurations.
+// EXAMPLE: solveNQueens(4, metrics) -> finds 2 valid safe configurations of 4 queens
+// TIME:    best O(1) / avg O(N!) / worst O(N!)      SPACE: O(N) recursion stack
+// VIVA:    For N=2 and N=3, returns 0 solutions because no safe placement exists.
 NQueensResult solveNQueens(int n, Metrics& metrics);
 
 // ============================================================================
@@ -44,22 +37,12 @@ struct SubsetSumResult {
     std::vector<int> subset;
 };
 
-/**
- * @brief Subset Sum Problem via Backtracking with Bounding.
- * 
- * IDEA:
- * Explores inclusion/exclusion of elements with two bounding functions:
- * Prunes if currentSum + S[i] > target or if currentSum + remainingSum < target.
- * 
- * TIME COMPLEXITY:
- * O(2^n) worst case, pruned heavily.
- * 
- * SPACE COMPLEXITY:
- * O(n) recursion stack.
- * 
- * WHEN IT FAILS:
- * Returns found = false if no combination equals target sum.
- */
+// WHAT:    Finds a combination of book invoice amounts that sum exactly to a grant allocation.
+// IDEA:    Sorts numbers ascending, then recursively branches on include/exclude.
+//          Prunes when currentSum + S[i] > target or currentSum + remainingSum < target.
+// EXAMPLE: solveSubsetSum([10, 20, 30, 40], 50, metrics) -> finds subset [10, 40] or [20, 30]
+// TIME:    best O(1) / avg pruned / worst O(2^n)      SPACE: O(n) recursion stack
+// VIVA:    Bounding functions prune entire subtrees as soon as the sum overshoots or cannot reach target.
 SubsetSumResult solveSubsetSum(std::vector<int> numbers, int targetSum, Metrics& metrics);
 
 // ============================================================================
@@ -78,22 +61,12 @@ enum class BBStrategy {
     LeastCost   // Best-First search using priority queue / max bound
 };
 
-/**
- * @brief 0/1 Knapsack Branch-and-Bound.
- * 
- * IDEA:
- * Prunes subtrees using fractional knapsack relaxation as an upper bound.
- * Explores state space via FIFO queue, LIFO stack, or LCBB priority queue.
- * 
- * TIME COMPLEXITY:
- * O(2^n) worst case; dramatically fewer nodes explored in practice.
- * 
- * SPACE COMPLEXITY:
- * O(2^n) queue/stack state nodes in worst case.
- * 
- * WHEN IT FAILS:
- * Degrades toward exponential complexity if all item ratios are identical and capacity is large.
- */
+// WHAT:    Solves 0/1 Knapsack using Branch-and-Bound with fractional relaxation upper bounds.
+// IDEA:    Explores a binary state-space tree. Prunes any node whose fractional upper bound
+//          is less than or equal to the best integer solution found so far.
+// EXAMPLE: Under budget austerity: LeastCost explores only 21 nodes vs FIFO's 879 nodes
+// TIME:    best O(n log n) / avg pruned / worst O(2^n)      SPACE: O(2^n) active state nodes
+// VIVA:    LeastCost uses BBMinHeap to expand the most promising node first, pruning 40x more nodes than FIFO.
 BBKnapsackResult knapsackBranchAndBound(const std::vector<Item>& items, int capacity, BBStrategy strategy, Metrics& metrics);
 
 } // namespace dls

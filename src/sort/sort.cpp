@@ -1,5 +1,9 @@
 #include "dls/sort.hpp"
 
+// NOTE: This file contains "explicit template instantiations".
+// It forces the compiler to pre-compile mergeSort and quickSort for int and Document
+// into the static library binary libdls_core.a, speeding up overall build times.
+
 namespace dls {
 
 // Explicit instantiations to ensure coverage in static library dls_core

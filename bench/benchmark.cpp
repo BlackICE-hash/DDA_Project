@@ -1,3 +1,8 @@
+// NOTE: This file is the standalone benchmark suite executable (dls_bench).
+// It runs automated comparative benchmarks across sorting, searching, string matching,
+// minimum spanning trees, and knapsack algorithms, printing timings and comparison counts,
+// and exporting results to data/benchmark_results.csv.
+
 #include "dls/types.hpp"
 #include "dls/generator.hpp"
 #include "dls/sort.hpp"
@@ -14,6 +19,7 @@
 
 namespace dls {
 
+// Structure holding one row of benchmark performance data
 struct BenchmarkRow {
     std::string category;
     std::string algorithm;
@@ -23,6 +29,14 @@ struct BenchmarkRow {
     std::string auxSpaceTheory;
 };
 
+// WHAT:    Executes automated benchmark suite across 5 algorithmic categories and exports CSV
+// IDEA:    Generates controlled deterministic datasets (seed 42), runs competing algorithm pairs
+//          with Metrics tracking, prints formatted console tables, and writes rows to CSV.
+// EXAMPLE: Runs MergeSort vs QuickSort on N=1k, 10k, 100k -> records elapsed ms and comparisons
+// TIME:    O(N log N) sorting + O(N) search + O(N) string match + O(nW) DP
+// SPACE:   O(N) for generated document vectors
+// VIVA:    Examiner asks: "Why do we run benchmarks with a fixed seed (42)?"
+//          Answer: A fixed seed ensures reproducibility so algorithm comparisons run on identical inputs.
 void runFullBenchmarks() {
     std::cout << "======================================================================\n";
     std::cout << "            DIGITAL LIBRARY ENGINE: AUTOMATED BENCHMARKS              \n";
@@ -137,6 +151,13 @@ void runFullBenchmarks() {
 
 } // namespace dls
 
+// WHAT:    Entry point for the benchmark executable (dls_bench)
+// IDEA:    Calls runFullBenchmarks() to measure and compare algorithms across categories.
+// EXAMPLE: ./build/dls_bench -> prints benchmark tables and updates data/benchmark_results.csv
+// TIME:    Total runtime ~0.5 - 1.5 seconds
+// SPACE:   O(N) for benchmark datasets
+// VIVA:    Examiner asks: "How do you run the benchmarks from the command line?"
+//          Answer: Run `./build/dls_bench` from the project root.
 int main() {
     dls::runFullBenchmarks();
     return 0;

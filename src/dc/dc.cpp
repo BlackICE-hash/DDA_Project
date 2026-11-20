@@ -3,6 +3,9 @@
 #include <stdexcept>
 #include <cmath>
 
+// NOTE: This file implements Divide-and-Conquer algorithms for library systems.
+// "Divide and Conquer" means: 1) Divide into smaller subproblems, 2) Conquer recursively, 3) Combine solutions.
+
 namespace dls {
 
 // ============================================================================
@@ -11,10 +14,12 @@ namespace dls {
 
 namespace {
 
-/**
- * Finds maximum subarray that crosses the midpoint mid:
- * [left..mid] and [mid+1..right].
- */
+// WHAT:    Finds maximum contiguous subarray crossing the midpoint mid.
+// IDEA:    Expands left from mid to find left maximum sum, expands right from mid+1 to find right maximum sum,
+//          and returns the combined span with sum leftSum + rightSum.
+// EXAMPLE: [-2, 1, -3, 4] with mid=3 -> left max sum 4, right max sum 3 -> cross sum 7
+// TIME:    best O(n) / avg O(n) / worst O(n) where n = high - low + 1      SPACE: O(1)
+// VIVA:    Linear O(n) crossing scan makes the D&C recurrence T(n) = 2T(n/2) + O(n), giving O(n log n).
 SubarrayResult findMaxCrossingSubarray(const std::vector<int>& arr, int low, int mid, int high, Metrics& metrics) {
     // Step 1: Find max subarray in left half ending at mid
     int64_t leftSum = LLONG_MIN;
@@ -48,9 +53,12 @@ SubarrayResult findMaxCrossingSubarray(const std::vector<int>& arr, int low, int
     return {maxLeft, maxRight, leftSum + rightSum};
 }
 
-/**
- * Recursive divide and conquer worker for Maximum Subarray.
- */
+// WHAT:    Recursive worker function for Maximum Subarray divide-and-conquer.
+// IDEA:    Base case: 1 element. Divides at mid, recursively conquers left and right halves,
+//          computes crossing sum, and returns the maximum of the three.
+// EXAMPLE: arr=[-1, 4, -2, 5] -> splits to [-1, 4] and [-2, 5], crossing returns [4, -2, 5]=7
+// TIME:    best O(n log n) / avg O(n log n) / worst O(n log n)      SPACE: O(log n) recursion stack
+// VIVA:    Base case 'low == high' returns single element directly without recursion.
 SubarrayResult maxSubarrayRecursive(const std::vector<int>& arr, int low, int high, Metrics& metrics) {
     // Base case: exactly one element
     if (low == high) {
@@ -81,22 +89,11 @@ SubarrayResult maxSubarrayRecursive(const std::vector<int>& arr, int low, int hi
 
 } // anonymous namespace
 
-/**
- * @brief Maximum Subarray using Divide and Conquer.
- * 
- * IDEA:
- * Split array into left and right halves. The maximal contiguous subarray either
- * resides wholly in the left half, wholly in the right half, or crosses the midpoint.
- * 
- * TIME COMPLEXITY:
- * Best/Avg/Worst: O(n log n).
- * 
- * SPACE COMPLEXITY:
- * O(log n) call stack frames.
- * 
- * WHEN IT FAILS:
- * Empty array input (handled safely by returning { -1, -1, 0 }).
- */
+// WHAT:    Finds peak visitor reading surge window using Divide and Conquer.
+// IDEA:    Starts timer, handles empty input edge case, invokes maxSubarrayRecursive, and stops timer.
+// EXAMPLE: turnstile deltas [-2, 1, -3, 4, -1, 2, 1, -5, 4] -> sum 6 in window [3..6]
+// TIME:    best O(n log n) / avg O(n log n) / worst O(n log n)      SPACE: O(log n) recursion stack
+// VIVA:    Empty array check prevents undefined behavior and returns {-1, -1, 0}.
 SubarrayResult maxSubarrayDivideAndConquer(const std::vector<int>& arr, Metrics& metrics) {
     if (arr.empty()) {
         return {-1, -1, 0};
@@ -108,9 +105,12 @@ SubarrayResult maxSubarrayDivideAndConquer(const std::vector<int>& arr, Metrics&
     return res;
 }
 
-/**
- * @brief Kadane's algorithm (linear O(n) oracle).
- */
+// WHAT:    Kadane's linear-time dynamic programming algorithm for maximum subarray.
+// IDEA:    Maintains current running sum; if currentSum + arr[i] < arr[i], starts a fresh window at i.
+//          Updates overall maximum sum whenever current running sum exceeds maxSoFar.
+// EXAMPLE: [-2, 1, -3, 4, -1, 2, 1, -5, 4] -> sum 6 in [3..6]
+// TIME:    best O(n) / avg O(n) / worst O(n)      SPACE: O(1) auxiliary space
+// VIVA:    Runs in O(n) time, serving as an independent oracle to verify Divide-and-Conquer.
 SubarrayResult maxSubarrayKadane(const std::vector<int>& arr, Metrics& metrics) {
     if (arr.empty()) return {-1, -1, 0};
 
@@ -144,22 +144,12 @@ SubarrayResult maxSubarrayKadane(const std::vector<int>& arr, Metrics& metrics) 
 // 2. FAST POWERING
 // ============================================================================
 
-/**
- * @brief Modular fast powering via binary exponentiation.
- * 
- * IDEA:
- * Decomposes power into sum of powers of 2. In each step, if bit is 1, multiply into result;
- * square base each time: b^(2k) = (b^2)^k.
- * 
- * TIME COMPLEXITY:
- * O(log exp).
- * 
- * SPACE COMPLEXITY:
- * O(1) auxiliary space.
- * 
- * WHEN IT FAILS:
- * Modulus <= 0 (invalid), or exp < 0 (requires modular inverse).
- */
+// WHAT:    Computes (base^exp) mod m using binary exponentiation.
+// IDEA:    Inspects lowest bit of exp: if 1, multiplies base into result.
+//          Squares base on every step and right-shifts exp by 1 (exp /= 2).
+// EXAMPLE: fastPowerModular(2, 10, 1000, metrics) -> 24 (1024 % 1000)
+// TIME:    best O(1) / avg O(log exp) / worst O(log exp)      SPACE: O(1)
+// VIVA:    Using __int128_t intermediate casting prevents 64-bit overflow during modular multiplication.
 int64_t fastPowerModular(int64_t base, int64_t exp, int64_t mod, Metrics& metrics) {
     if (mod <= 0) return 0; // Invalid modulus
     if (exp < 0) return 0;   // Negative exponent not supported directly
@@ -184,9 +174,11 @@ int64_t fastPowerModular(int64_t base, int64_t exp, int64_t mod, Metrics& metric
     return result;
 }
 
-/**
- * @brief Integer fast powering.
- */
+// WHAT:    Computes base^exp in integer arithmetic without modulo.
+// IDEA:    Repeatedly squares base and multiplies into result whenever lowest bit of exp is 1.
+// EXAMPLE: fastPower(2, 8, metrics) -> 256
+// TIME:    best O(1) / avg O(log exp) / worst O(log exp)      SPACE: O(1)
+// VIVA:    Takes only log2(exp) multiplications instead of exp multiplications.
 int64_t fastPower(int64_t base, int64_t exp, Metrics& metrics) {
     if (exp < 0) return 0;
 
@@ -210,25 +202,12 @@ int64_t fastPower(int64_t base, int64_t exp, Metrics& metrics) {
 // 3. CELEBRITY DISCOVERY
 // ============================================================================
 
-/**
- * @brief Celebrity discovery in citation matrix.
- * 
- * IDEA:
- * Pairwise elimination using divide and conquer / two pointers:
- * Let candidate C = 0. Iterate i = 1 to n-1:
- * If C cites i, C cannot be celebrity, so set C = i.
- * If C does not cite i, i cannot be celebrity, so C remains.
- * Survivor C is verified against all papers in O(n) checks.
- * 
- * TIME COMPLEXITY:
- * O(n) total checks (n-1 elimination queries + 2(n-1) verification queries).
- * 
- * SPACE COMPLEXITY:
- * O(1) auxiliary space.
- * 
- * WHEN IT FAILS:
- * Returns -1 if no paper meets both conditions (all cite it, it cites none).
- */
+// WHAT:    Discovers an authoritative paper in an n x n citation matrix in O(n) queries.
+// IDEA:    Compares candidate C against each paper i: if C cites i, C is eliminated (C = i).
+//          If C doesn't cite i, i is eliminated. Verifies surviving candidate in 2(n-1) checks.
+// EXAMPLE: Paper 7 cited by all 19 peers and citing no one -> returns 7 in 57 queries
+// TIME:    best O(n) / avg O(n) / worst O(n) queries      SPACE: O(1)
+// VIVA:    Elimination reduces candidates from n to 1 in n-1 queries; verification confirms both conditions.
 int findCelebrity(const std::vector<std::vector<int>>& mat, Metrics& metrics) {
     int n = static_cast<int>(mat.size());
     if (n == 0) return -1;
@@ -279,6 +258,11 @@ int findCelebrity(const std::vector<std::vector<int>>& mat, Metrics& metrics) {
 
 namespace {
 
+// WHAT:    Adds two square matrices element-wise: C = A + B.
+// IDEA:    Iterates over all rows and columns and sets C[i][j] = A[i][j] + B[i][j].
+// EXAMPLE: [[1, 2], [3, 4]] + [[5, 6], [7, 8]] -> [[6, 8], [10, 12]]
+// TIME:    best O(n^2) / avg O(n^2) / worst O(n^2)      SPACE: O(n^2) for result matrix
+// VIVA:    Helper used in Strassen's submatrix combination steps.
 Matrix addMatrix(const Matrix& A, const Matrix& B) {
     size_t n = A.size();
     Matrix C(n, std::vector<int64_t>(n, 0));
@@ -290,6 +274,11 @@ Matrix addMatrix(const Matrix& A, const Matrix& B) {
     return C;
 }
 
+// WHAT:    Subtracts two square matrices element-wise: C = A - B.
+// IDEA:    Iterates over all rows and columns and sets C[i][j] = A[i][j] - B[i][j].
+// EXAMPLE: [[5, 6], [7, 8]] - [[1, 2], [3, 4]] -> [[4, 4], [4, 4]]
+// TIME:    best O(n^2) / avg O(n^2) / worst O(n^2)      SPACE: O(n^2) for result matrix
+// VIVA:    Helper used in Strassen's 7 sub-product formulations.
 Matrix subtractMatrix(const Matrix& A, const Matrix& B) {
     size_t n = A.size();
     Matrix C(n, std::vector<int64_t>(n, 0));
@@ -301,7 +290,12 @@ Matrix subtractMatrix(const Matrix& A, const Matrix& B) {
     return C;
 }
 
-// Internal recursive Strassen worker
+// WHAT:    Recursive worker for Strassen's matrix multiplication.
+// IDEA:    If size <= threshold, multiplies classically. Otherwise partitions A and B into
+//          4 quadrants, computes 7 recursive products M1..M7, and combines into C11..C22.
+// EXAMPLE: Multiplies two 32x32 matrices using 7 products of size 16x16
+// TIME:    best O(n^2.807) / avg O(n^2.807) / worst O(n^2.807)      SPACE: O(n^2) auxiliary buffers
+// VIVA:    Computing 7 sub-products instead of 8 breaks the O(n^3) barrier.
 Matrix strassenRecursive(const Matrix& A, const Matrix& B, size_t threshold, Metrics& metrics) {
     size_t n = A.size();
 
@@ -380,7 +374,11 @@ Matrix strassenRecursive(const Matrix& A, const Matrix& B, size_t threshold, Met
     return C;
 }
 
-// Next power of 2 helper for matrix padding
+// WHAT:    Finds the smallest power of 2 greater than or equal to n.
+// IDEA:    Repeatedly left-shifts p until p >= n.
+// EXAMPLE: nextPowerOf2(5) -> 8
+// TIME:    best O(1) / avg O(log n) / worst O(log n)      SPACE: O(1)
+// VIVA:    Used to zero-pad non-power-of-2 matrices for Strassen partitioning.
 size_t nextPowerOf2(size_t n) {
     size_t p = 1;
     while (p < n) p <<= 1;
@@ -389,9 +387,11 @@ size_t nextPowerOf2(size_t n) {
 
 } // anonymous namespace
 
-/**
- * @brief Classical O(n^3) Matrix Multiplication.
- */
+// WHAT:    Multiplies two matrices using the classical triple nested loop algorithm.
+// IDEA:    Loops i from 0..rows, k from 0..inner, j from 0..cols, accumulating C[i][j] += A[i][k] * B[k][j].
+// EXAMPLE: Multiplies (2x3) by (3x2) matrix -> produces (2x2) result
+// TIME:    best O(n^3) / avg O(n^3) / worst O(n^3)      SPACE: O(n^2) for product matrix
+// VIVA:    The inner loop order (i, k, j) maximizes cache hit rates on row-major matrix memory.
 Matrix multiplyMatrixClassical(const Matrix& A, const Matrix& B, Metrics& metrics) {
     if (A.empty() || B.empty() || A[0].size() != B.size()) {
         return {};
@@ -419,9 +419,11 @@ Matrix multiplyMatrixClassical(const Matrix& A, const Matrix& B, Metrics& metric
     return C;
 }
 
-/**
- * @brief Strassen's Matrix Multiplication with auto-padding and threshold fallback.
- */
+// WHAT:    Multiplies two square matrices using Strassen's algorithm with zero-padding and threshold fallback.
+// IDEA:    Pads matrices to nearest power of 2, calls recursive Strassen, and unpads result back to original size.
+// EXAMPLE: Multiplies citation matrices in O(n^2.807) time instead of O(n^3)
+// TIME:    best O(n^2.807) / avg O(n^2.807) / worst O(n^2.807)      SPACE: O(n^2)
+// VIVA:    Below threshold (default 16), falls back to classical multiplication to avoid submatrix recursion overhead.
 Matrix multiplyMatrixStrassen(const Matrix& A, const Matrix& B, Metrics& metrics, size_t threshold) {
     if (A.empty() || B.empty() || A[0].size() != B.size()) {
         return {};

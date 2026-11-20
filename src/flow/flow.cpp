@@ -1,3 +1,8 @@
+// NOTE: This file implements Network Flow and Matching:
+// 1. Edmonds-Karp Max Flow: Ford-Fulkerson using BFS to find shortest augmenting paths.
+// 2. Max Bipartite Matching: Reduces bipartite reader-to-book matching to Max Flow by adding
+//    a super-source and super-sink with unit capacity edges.
+
 #include "dls/flow.hpp"
 #include <climits>
 #include <vector>
@@ -6,10 +11,14 @@ namespace dls {
 
 namespace {
 
-/**
- * Custom BFS to find shortest augmenting path in residual network.
- * Returns true if an augmenting path from source to sink exists, filling parent pointers.
- */
+// WHAT:    Custom BFS to find shortest augmenting path in residual network
+// IDEA:    Explores vertices reachable from source along edges with residual capacity > 0.
+//          Records parent pointers so we can trace the path from sink back to source.
+// EXAMPLE: source=0, sink=3, edges with cap>0: 0->1, 1->3 -> returns true, parent[3]=1, parent[1]=0
+// TIME:    O(V + E) = O(V^2) with adjacency matrix   SPACE: O(V) queue and parent array
+// VIVA:    Examiner asks: "Why BFS instead of DFS here?"
+//          Answer: Edmonds-Karp specifies BFS so each augmenting path has the minimum number
+//          of edges. This guarantees the algorithm terminates in O(V * E^2) time.
 bool bfsAugmentingPath(int n, const std::vector<std::vector<int64_t>>& residual,
                        int source, int sink, std::vector<int>& parent, Metrics& metrics) {
     for (int i = 0; i < n; ++i) {
@@ -17,7 +26,7 @@ bool bfsAugmentingPath(int n, const std::vector<std::vector<int64_t>>& residual,
     }
     parent[source] = source;
 
-    // Queue implemented from scratch via vector and head index
+    // Queue implemented from scratch via vector and head index (FIFO)
     std::vector<int> q;
     q.reserve(n);
     q.push_back(source);
@@ -32,18 +41,26 @@ bool bfsAugmentingPath(int n, const std::vector<std::vector<int64_t>>& residual,
             if (parent[v] == -1 && residual[u][v] > 0) {
                 parent[v] = u;
                 if (v == sink) {
-                    return true; // Reached sink
+                    return true; // Reached sink: augmenting path found
                 }
                 q.push_back(v);
             }
         }
     }
 
-    return false;
+    return false; // No path with positive residual capacity exists from source to sink
 }
 
 } // anonymous namespace
 
+// WHAT:    Computes maximum network flow from source to sink using Edmonds-Karp algorithm
+// IDEA:    Repeatedly finds an augmenting path using BFS. For each path, finds bottleneck capacity,
+//          pushes flow along the path, reduces forward residual capacity, and increases backward capacity.
+// EXAMPLE: 4-node diamond network with capacity 10 along two parallel paths -> max flow = 20
+// TIME:    O(V * E^2)                SPACE: O(V^2) for residual and flow matrices
+// VIVA:    Examiner asks: "Why do we add capacity to back-edges (residual[curr][p] += bottleneck)?"
+//          Answer: Back-edges allow the algorithm to 'undo' earlier suboptimal flow routing
+//          if a better global combination of paths is discovered later.
 MaxFlowResult edmondsKarpMaxFlow(int numVertices,
                                  const std::vector<std::vector<int64_t>>& capacity,
                                  int source, int sink,
@@ -93,6 +110,17 @@ MaxFlowResult edmondsKarpMaxFlow(int numVertices,
     return {totalFlow, flow};
 }
 
+// WHAT:    Finds maximum cardinality bipartite matching (e.g. allocating readers to books)
+// IDEA:    Transforms the bipartite graph into a flow network:
+//          - Add super-source s with directed edges of capacity 1 to all left vertices.
+//          - Keep original bipartite edges directed from left to right with capacity 1.
+//          - Add directed edges of capacity 1 from all right vertices to super-sink t.
+//          - Max flow value equals max matching size; edges with flow=1 form the matching pairs.
+// EXAMPLE: 2 readers, 2 books, pairs (0,0), (0,1), (1,1) -> max matching = 2 pairs: (0,0) and (1,1)
+// TIME:    O(V * E^2) via Edmonds-Karp   SPACE: O((V_L + V_R)^2) capacity matrix
+// VIVA:    Examiner asks: "Why are all capacities set to 1?"
+//          Answer: Each left vertex can match at most one right vertex, and each right vertex
+//          can match at most one left vertex. Unit capacity enforces this matching constraint.
 MatchingResult maxBipartiteMatching(int numLeft, int numRight,
                                     const std::vector<std::pair<int, int>>& bipartiteEdges,
                                     Metrics& metrics) {
@@ -114,12 +142,12 @@ MatchingResult maxBipartiteMatching(int numLeft, int numRight,
 
     std::vector<std::vector<int64_t>> capacity(totalVertices, std::vector<int64_t>(totalVertices, 0));
 
-    // Connect source to all left vertices
+    // Connect source to all left vertices with capacity 1
     for (int u = 1; u <= numLeft; ++u) {
         capacity[source][u] = 1;
     }
 
-    // Connect all right vertices to sink
+    // Connect all right vertices to sink with capacity 1
     for (int v = 1; v <= numRight; ++v) {
         int rightIndex = numLeft + v;
         capacity[rightIndex][sink] = 1;
