@@ -1,0 +1,17 @@
+category,algorithm,input_size,time_ms,comparisons,aux_space_theory
+Sort,MergeSort,1000,1.08338,8705,O(n)
+Sort,QuickSort,1000,0.123382,11613,O(log n) stack
+Sort,MergeSort,10000,16.8316,120439,O(n)
+Sort,QuickSort,10000,1.49017,144281,O(log n) stack
+Sort,MergeSort,100000,196.898,1536433,O(n)
+Sort,QuickSort,100000,18.9127,1974783,O(log n) stack
+Search,BinarySearchIterative,100000,0.000892,31,O(1)
+Search,BinarySearchRecursive,100000,0.000111,31,O(log n) stack
+StringMatch,Naive,100000,0.184243,799944,O(1)
+StringMatch,RabinKarp,100000,0.316806,100001,O(1)
+StringMatch,KMP,100000,0.1781,200005,O(m)
+MST,Prim,50,0.019404,2090,O(V + E)
+MST,Kruskal,50,0.013484,2473,O(V + E)
+Knapsack,DP,20,0.003319,1074,O(nW)
+Knapsack,LCBB,20,0.019766,360,O(2^n) queue
+Knapsack,FIFO-BB,20,0.029114,3529,O(2^n) queue
