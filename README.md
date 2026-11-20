@@ -1,11 +1,6 @@
 # Digital Library Search & Recommendation Engine (DLS Engine)
 
-[![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B17)
-[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![CMake](https://img.shields.io/badge/CMake-3.16%2B-orange.svg)](https://cmake.org/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
-
-The **Digital Library Search and Recommendation Engine (DLS Engine)** is an industrial-strength, educational, and high-performance algorithmic simulation of a modern digital research library. Built from scratch in modern C++17 with zero third-party dependencies, the engine models catalog indexing, distributed synchronization, physical logistical routing, room reservation scheduling, data compression, manuscript search, and acquisition optimization.
+The **Digital Library Search and Recommendation Engine (DLS Engine)** is an algorithmic simulation of a modern digital research library. Built in modern C++17 with zero third-party dependencies, the engine models catalog indexing, distributed synchronization, physical logistical routing, room reservation scheduling, data compression, manuscript search, and acquisition optimization.
 
 ---
 
@@ -17,8 +12,8 @@ Comprehensive project documentation is available in the [`docs/`](docs/) directo
 |:---|:---|
 | 📖 [**`docs/USER_GUIDE.md`**](docs/USER_GUIDE.md) | Complete guide on building, running the interactive CLI menu, running `--all`, running benchmarks, and exporting CSV files with sample terminal output. |
 | 🏗️ [**`docs/DESIGN_GUIDE.md`**](docs/DESIGN_GUIDE.md) | Deep dive into architecture, folder layout, core data structures (`Document`, `Metrics`, `MinHeap`, `DisjointSet`), and the rationale mapping each algorithm to library tasks. |
-| ⏱️ [**`docs/DEMO_SCRIPT.md`**](docs/DEMO_SCRIPT.md) | An 8-minute presentation script covering the three scenarios, featuring word-for-word spoken talking points and exact numbers to highlight to evaluation panels. |
-| 📐 [**`docs/COMPLEXITY.md`**](docs/COMPLEXITY.md) | Theoretical complexity analysis, Master Theorem derivations, recursion tree proofs, and formal NP-Completeness reductions (Circuit-SAT $\to$ 3-SAT $\to$ Subset-Sum $\to$ 0/1 Knapsack). |
+| ⏱️ [**`docs/DEMO_SCRIPT.md`**](docs/DEMO_SCRIPT.md) | An 8-minute presentation script covering the three scenarios, listing commands to run and key numbers to highlight. |
+| 📐 [**`docs/COMPLEXITY.md`**](docs/COMPLEXITY.md) | Theoretical complexity analysis, Master Theorem derivations, recursion tree proofs, and formal NP-Completeness reduction (Subset-Sum $\le_P$ 0/1 Knapsack). |
 | 🎓 [**`docs/STUDY_NOTES.md`**](docs/STUDY_NOTES.md) | Comprehensive algorithm study notes, loop invariants, correctness proofs, hand-traceable numerical examples, and viva questions & answers for all 20+ algorithms. |
 
 ---
@@ -26,11 +21,11 @@ Comprehensive project documentation is available in the [`docs/`](docs/) directo
 ## Key Architectural Highlights
 
 * **Zero External Dependencies**: Implemented strictly using modern C++17 standard library components (`std::vector`, `std::string`, `std::chrono`, `std::iostream`).
-* **From-Scratch Data Structures**: Includes a generic templated binary min-heap (`MinHeap<T, Comp>`) and Disjoint Set Union (`DisjointSet`) with path compression and union by rank.
+* **From-Scratch Data Structures**: Includes a binary min-heap (`MinHeap`) and Disjoint Set Union (`DisjointSet`) with path compression and union by rank.
 * **Unified Metrics Harness**: Every algorithm is instrumented with a `Metrics` tracker measuring runtime in milliseconds, exact key comparisons, and theoretical auxiliary space.
 * **Dual-Implementation Verification**: Dual algorithmic strategies verify correctness against an independent oracle across sorting, divide-and-conquer, graph algorithms, knapsack search, and pattern matching.
-* **Resilience Under Constraint Shock**: Rigorously tests system behavior during financial austerity (50% budget cuts) and network infrastructure failures (inter-branch fiber cuts).
-* **Massive Scalability**: Stress-tested on datasets of 100,000+ catalog records and adversarial character streams.
+* **Resilience Under Constraint Shock**: Tests system behavior during financial austerity (50% budget cuts) and network infrastructure failures (inter-branch fiber cuts).
+* **Scalability**: Tested on datasets of 100,000+ catalog records and adversarial character streams.
 
 ---
 
@@ -108,7 +103,7 @@ Bypass the interactive menu for automated scripts or grading pipelines:
 ```
 
 ### 3. Automated Performance Benchmarks (`dls_bench`)
-Run the standalone benchmarking binary to evaluate execution times, comparisons, and memory footprint across multiple scales ($N = 1\,000, 10\,000, 100\,000$):
+Run the standalone benchmarking binary to evaluate execution times, comparison counts and theoretical auxiliary space across multiple scales ($N = 1\,000, 10\,000, 100\,000$):
 ```bash
 ./build/dls_bench
 ```

@@ -93,7 +93,7 @@ This study guide contains theoretical foundations, correctness proofs, hand-trac
   1. *Q: How does Median-of-Three pivot selection prevent $O(n^2)$ degradation?*  
      *A:* Inspecting first, middle, and last elements and choosing their median guarantees that the pivot is never the extreme minimum or maximum of a sorted/reverse-sorted array.
   2. *Q: Why is Quick Sort faster than Merge Sort in practice?*  
-     *A:* Cache locality (sequential memory scans without buffer reallocation) and smaller constant factors.
+     *A:* Likely due to data movement and cache behaviour (sequential memory scans without buffer reallocation) and smaller constant factors.
   3. *Q: How can worst-case recursion depth be restricted to $O(\log n)$?*  
      *A:* Tail-call optimization: always recurse on the smaller partition first and iterate on the larger partition.
 
@@ -496,7 +496,7 @@ This study guide contains theoretical foundations, correctness proofs, hand-trac
   2. *Q: How is the actual path reconstructed?*  
      *A:* Maintain a $next[i][j]$ matrix. When $D[i][k] + D[k][j] < D[i][j]$, set $next[i][j] = next[i][k]$.
   3. *Q: Compare Floyd-Warshall vs running Dijkstra $|V|$ times.*  
-     *A:* On dense graphs ($E \approx V^2$), $V \times \text{Dijkstra} = O(V^3 \log V)$, whereas Floyd-Warshall is $O(V^3)$ with simpler code and tighter cache loops.
+     *A:* On dense graphs ($E \approx V^2$), $V \times \text{Dijkstra} = O(V^3 \log V)$, whereas Floyd-Warshall is $O(V^3)$ with simpler code and tighter loops.
 
 ---
 
@@ -512,12 +512,12 @@ This study guide contains theoretical foundations, correctness proofs, hand-trac
   - From 2 to 1: $dp[111_2][1] = dp[101_2][2] + 15 = 35$.
   - Return to 0: $\min(dp[111_2][1] + 10, dp[111_2][2] + 20) = \min(35+10, 25+20) = 45$.
 * **Complexity:** Time: $O(n^2 2^n)$. Space: $O(n 2^n)$.
-* **Failure Cases:** $n > 20$ (state table exceeds gigabytes of memory).
+* **Failure Cases:** $n > 20$ (the table has n x 2^n entries, so memory grows exponentially).
 * **3 Likely Viva Questions & Answers:**
   1. *Q: What does the bitmask represent?*  
      *A:* The $i$-th bit of `mask` is 1 if vertex $i$ has been visited, 0 otherwise.
   2. *Q: How does $O(n^2 2^n)$ compare to $(n-1)!$?*  
-     *A:* For $n=15$, $14! \approx 8.7 \times 10^{10}$ operations, whereas $15^2 \times 2^{15} \approx 7.37 \times 10^6$ operations ($>10,000\times$ faster).
+     *A:* For $n=15$, $14! \approx 8.7 \times 10^{10}$ operations, whereas $15^2 \times 2^{15} \approx 7.37 \times 10^6$ operations (about 10,000x faster).
   3. *Q: How is the tour reconstructed?*  
      *A:* By storing `parent[mask][u]` recording which predecessor vertex generated the minimum cost.
 
@@ -664,7 +664,7 @@ This study guide contains theoretical foundations, correctness proofs, hand-trac
   2. *Q: When does a modular inverse exist?*  
      *A:* $a^{-1} \pmod m$ exists if and only if $\gcd(a, m) = 1$.
   3. *Q: How does CRT speed up large RSA computations?*  
-     *A:* Decryption $c^d \pmod n$ is split into $c^d \pmod p$ and $c^d \pmod q$ ($n = pq$), which are $4\times$ faster, then combined via CRT.
+     *A:* Decryption $c^d \pmod n$ is split into $c^d \pmod p$ and $c^d \pmod q$ ($n = pq$), which are about 4x faster (varies per run), then combined via CRT.
 
 ---
 

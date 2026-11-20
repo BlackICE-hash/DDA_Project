@@ -23,7 +23,7 @@ The DLS Engine is engineered in modern C++17 with zero external third-party libr
 * **Operating System**: Linux (Ubuntu 20.04+, Debian 11+, Fedora, Arch) or POSIX-compliant environment (WSL2 / macOS with Clang).
 * **C++ Compiler**: GCC 9.0+ or Clang 10.0+ supporting `-std=c++17`.
 * **Build System**: CMake 3.16 or newer and GNU Make (or Ninja).
-* **Hardware Requirements**: Minimum 512 MB RAM (100,000-record stress tests utilize ~100 MB peak RSS).
+* **Hardware Requirements**: Minimum 512 MB RAM (100,000-record stress tests utilize well under 512 MB).
 
 Verify your environment tools:
 ```bash

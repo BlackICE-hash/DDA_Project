@@ -175,7 +175,7 @@ $$P(n) = C_{n-1} = \frac{1}{n} \binom{2n - 2}{n - 1} = \Omega\left(\frac{4^n}{n^
 
 ## 3. Formal Polynomial-Time Reduction: SUBSET-SUM $\le_P$ 0/1 KNAPSACK
 
-This reduction proves that the decision version of 0/1 Knapsack is **NP-complete**.
+Subset-Sum is a known NP-complete problem. This polynomial-time reduction proves that the decision version of 0/1 Knapsack is also **NP-complete**.
 
 ```
                 +------------------------------------+

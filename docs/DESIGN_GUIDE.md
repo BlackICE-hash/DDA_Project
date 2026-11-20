@@ -47,35 +47,6 @@ The DLS Engine is structured around five core architectural tenets:
 4. **Zero Third-Party Dependencies**: All foundational structures (including `MinHeap` and `DisjointSet`) and algorithms are built entirely from scratch in standard C++17.
 5. **Dual-Implementation Verification**: Where possible, dual strategies (e.g., Merge Sort vs Quick Sort, Divide-and-Conquer vs Kadane, DP Knapsack vs Branch-and-Bound, Prim vs Kruskal, KMP vs Naive) verify correctness against an independent oracle.
 
-```mermaid
-graph TD
-    UI[CLI Application / Scenarios: app/main.cpp] --> CoreLib[Core Static Library: libdls_core.a]
-    Bench[Automated Benchmarking: bench/benchmark.cpp] --> CoreLib
-    Tests[Automated Unit Tests: tests/] --> CoreLib
-
-    subgraph "Core Library (dls_core)"
-        Types[Domain Types: types.hpp]
-        Heap[Custom MinHeap: heap.hpp]
-        DSU[Custom DisjointSet: disjoint_set.hpp]
-        Gen[Data Generator: generator.hpp]
-
-        Sort[Sorting & Searching: sort.hpp, search.hpp]
-        DC[Divide & Conquer: dc.hpp]
-        Greedy[Greedy Algorithms: greedy.hpp]
-        DP[Dynamic Programming: dp.hpp]
-        BB[Backtracking & Branch-and-Bound: bb.hpp]
-        Flow[Max Flow & Bipartite Matching: flow.hpp]
-        Num[Number Theory & CRT: num.hpp]
-        Str[String Matching: strmatch.hpp]
-    end
-
-    CoreLib --> Types
-    CoreLib --> Heap
-    CoreLib --> DSU
-    CoreLib --> Gen
-    Types --> Metrics[Metrics Engine: ms, comparisons, Aux Space]
-```
-
 ---
 
 ## 2. Folder & File Layout
@@ -184,7 +155,7 @@ Defined in [include/dls/types.hpp](file:///home/piyush/Workspace/DSA/DDA_Project
 struct Metrics {
     double ms{0.0};              // Execution duration in milliseconds
     uint64_t comparisons{0};     // Total key comparisons made by the algorithm
-    size_t peakBytes{0};         // Peak or allocated memory usage in bytes
+    size_t peakBytes{0};         // Size of merge sort's auxiliary buffer (sizeof(T) * n), not measured peak memory
     std::chrono::high_resolution_clock::time_point startTime;
 
     void reset();
@@ -200,8 +171,8 @@ struct Metrics {
 * **Purpose**: Provides uniform telemetry across all algorithm implementations without skewing execution logic.
 * **Timer**: Wraps `std::chrono::high_resolution_clock` to record wall-clock runtimes with sub-microsecond precision.
 * **Comparison Tracking**: Every sorting swap, binary search split, priority queue comparison, and string mismatch passes through or increments `comparisons`, giving theoretical validation to asymptotic analysis.
-* **Memory Tracking**:
-  * `peakBytes`: Records auxiliary memory allocations (e.g., Merge Sort buffer allocations).
+* **Auxiliary Buffer Tracking**:
+  * `peakBytes`: Size of merge sort's auxiliary buffer (`sizeof(T) * n`), not measured peak memory.
   * Theoretical auxiliary space complexities are reported directly across printed logs and benchmark exports.
 
 ---
