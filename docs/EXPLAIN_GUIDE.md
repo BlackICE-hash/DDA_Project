@@ -247,7 +247,55 @@ ctest --test-dir build --output-on-failure
 
 ---
 
-## 6. Honest Limitations & How to Address Them
+## 7. Library Desk (Menu Option 10)
+
+The Library Desk is an interactive sub-menu that simulates a real library terminal. It reuses existing algorithms—no new algorithms were written.
+
+### What Each Option Does
+
+| Desk Option | What It Does | Algorithm Used | Complexity |
+|:---:|:---|:---|:---|
+| **1. Search titles** | Reads a word, converts both word and each book title to lower case, runs KMP string matching on every title, prints matching books. | KMP (`matchKMP`) | $O(500 \times (n + m))$ where $n$ = title length, $m$ = word length |
+| **2. Find by ID** | Sorts a copy of the catalog by ID with MergeSort, then uses iterative Binary Search to find the book. | MergeSort + Binary Search | $O(n \log n)$ sort + $O(\log n)$ search |
+| **3. Top N by score** | Sorts a copy by score descending with MergeSort, prints the first N. | MergeSort (`DocumentScoreDesc`) | $O(n \log n)$ |
+| **4. Recommend similar** | Finds the source book by Binary Search. For every other book, computes `score = 2 * (shared keywords) + (LCS title length) / 5`. Sorts recommendations with MergeSort, prints top 5. | Binary Search + LCS (`longestCommonSubsequence`) + MergeSort | $O(n \cdot m_1 \cdot m_2)$ for LCS across titles |
+
+### Sample Run
+
+```text
+# Start the program and select option 10 (Library Desk)
+printf "10\n1\nalgorithms\n2\n145\n3\n5\n4\n145\n0\n0\n" | ./build/dls_app
+
+# Option 1: Search "algorithms" -> finds books with "algorithms" in the title
+#   Shows each matching book's ID, title, year, and score.
+#   Prints total KMP comparisons across all 500 titles.
+
+# Option 2: Find ID 145 -> prints full details of book 145
+#   Shows ID, title, year, score, and keywords.
+#   Reports binary search comparisons (about 9 for 500 books).
+
+# Option 3: Top 5 -> prints the 5 highest-scored books
+#   Books are sorted by relevance score descending.
+
+# Option 4: Recommend for ID 145 -> finds 5 most similar books
+#   Shows each recommendation's ID, title, score, and shared keywords.
+#   Prints the formula: score = 2 * (shared keywords) + (LCS title length) / 5
+```
+
+### Viva Questions
+
+1. *Q: Why do you convert to lower case before running KMP?*
+   *A:* To make the search case-insensitive, so "Algorithms" matches "algorithms".
+
+2. *Q: Why do you sort a copy instead of the original catalog?*
+   *A:* To preserve the original order. Sorting changes the positions of elements, and each sub-option needs a different sort order (by ID vs by score).
+
+3. *Q: What does the recommendation formula measure?*
+   *A:* Shared keywords (weighted 2x) capture topic overlap. LCS of titles (divided by 5 to avoid dominating) captures naming similarity. Together they estimate how related two books are.
+
+---
+
+## 8. Honest Limitations & How to Address Them
 
 If the examiner asks about limitations of this project, give these honest, professional answers:
 

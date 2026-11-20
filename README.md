@@ -88,6 +88,7 @@ Menu options include:
 * `7`: Dynamic Programming Demo (Knapsack, Matrix Chain, LCS, OBST, Bellman, TSP)
 * `8`: Backtracking, Flow, CRT & String Matching Demo
 * `9`: Export Sample Datasets to `data/documents.csv`
+* `10`: Library Desk (search titles, find by ID, top N books, recommend similar books)
 * `0`: Exit
 
 ### 2. Automated CLI Modes (`--all`, `--scenario`)

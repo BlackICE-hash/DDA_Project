@@ -408,10 +408,310 @@ void runScenario3_StressTest() {
     }
 }
 
+// ===== LIBRARY DESK (OPTION 10) =====
+
+// A small struct used to hold a recommendation score for one book.
+// "bookIndex" is the position of the book in the catalog vector.
+// "score" is the recommendation score (higher = more similar).
+// "sharedKeywords" counts how many keywords two books have in common.
+struct RecommendEntry {
+    int bookIndex;
+    int score;
+    int sharedKeywords;
+};
+
+// Comparator struct for sorting RecommendEntry by score descending.
+// Used by mergeSort so the best recommendations appear first.
+struct RecommendScoreDesc {
+    bool operator()(const RecommendEntry& a, const RecommendEntry& b) const {
+        // Higher score should come first (descending order)
+        if (a.score != b.score) return a.score > b.score;
+        // Break ties by lower bookIndex (just for stable ordering)
+        return a.bookIndex < b.bookIndex;
+    }
+};
+
+// Helper: convert a string to lower case.
+// We use a simple for loop to change each character.
+std::string toLower(const std::string& s) {
+    std::string result = s;
+    for (int i = 0; i < static_cast<int>(result.size()); i++) {
+        // If uppercase A-Z, convert to lowercase a-z
+        if (result[i] >= 'A' && result[i] <= 'Z') {
+            result[i] = result[i] + ('a' - 'A');
+        }
+    }
+    return result;
+}
+
+// WHAT:    Interactive "Library Desk" sub-menu simulating a real library terminal
+// IDEA:    Generates 500 books once, then loops a sub-menu offering:
+//          1. Search titles for a word (KMP string matching)
+//          2. Find a book by ID (MergeSort + Binary Search)
+//          3. Show top N books by score (MergeSort by score descending)
+//          4. Recommend books similar to a given ID (Binary Search + LCS + keyword overlap)
+//          Each option reuses existing library algorithms (no new algorithms written).
+// EXAMPLE: User types "1", enters "algorithms", sees all matching books with KMP comparisons
+// TIME:    Depends on sub-option chosen      SPACE: O(500) for the book catalog
+// VIVA:    Examiner asks: "Which algorithms does the Library Desk use?"
+//          Answer: KMP (search), MergeSort (sorting), Binary Search (lookup), LCS (title similarity).
+void runLibraryDesk() {
+    printHeader("LIBRARY DESK");
+    std::cout << "Welcome to the Library Desk! Generating 500-book catalog...\n";
+
+    // Generate the catalog once (seed 42 for reproducibility)
+    std::vector<Document> catalog = DataGenerator::generateDocuments(500, 42);
+    std::cout << "Catalog ready: " << catalog.size() << " books loaded.\n";
+
+    int deskChoice = -1;
+    while (deskChoice != 0) {
+        // Print the sub-menu
+        std::cout << "\n--- Library Desk Menu ---\n";
+        std::cout << "  1. Search titles for a word\n";
+        std::cout << "  2. Find a book by ID\n";
+        std::cout << "  3. Show top N books by score\n";
+        std::cout << "  4. Recommend books similar to a book ID\n";
+        std::cout << "  0. Back to main menu\n";
+        std::cout << "Desk choice [0-4]: ";
+
+        // Input validation: keep asking if the user enters something invalid
+        if (!(std::cin >> deskChoice)) {
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            std::cout << "Please enter a number 0-4.\n";
+            deskChoice = -1;
+            continue;
+        }
+        if (deskChoice < 0 || deskChoice > 4) {
+            std::cout << "Invalid choice. Please enter 0-4.\n";
+            deskChoice = -1;
+            continue;
+        }
+
+        // Consume leftover newline so std::getline works correctly after std::cin >>
+        std::cin.ignore(10000, '\n');
+
+        // ---- DESK OPTION 1: Search titles for a word (KMP) ----
+        if (deskChoice == 1) {
+            std::cout << "\nEnter a search word: ";
+            std::string word;
+            std::getline(std::cin, word);
+
+            // Validate: empty word is not allowed
+            if (word.empty()) {
+                std::cout << "Search word cannot be empty. Try again.\n";
+                continue;
+            }
+
+            // Convert search word to lower case for case-insensitive matching
+            std::string wordLower = toLower(word);
+
+            std::cout << "\nSearching for \"" << word << "\" in " << catalog.size() << " titles...\n\n";
+
+            int matchCount = 0;
+            uint64_t totalComparisons = 0;
+
+            // Loop through every book and run KMP on its lower-cased title
+            for (int i = 0; i < static_cast<int>(catalog.size()); i++) {
+                // Convert this book's title to lower case
+                std::string titleLower = toLower(catalog[i].title);
+
+                // Run KMP string matching on this title
+                Metrics mKMP;
+                std::vector<size_t> hits = matchKMP(titleLower, wordLower, mKMP);
+                totalComparisons = totalComparisons + mKMP.comparisons;
+
+                // If KMP found at least one match, print the book details
+                if (hits.size() > 0) {
+                    matchCount++;
+                    std::cout << "  [ID " << catalog[i].id << "] \""
+                              << catalog[i].title << "\" (Year: "
+                              << catalog[i].year << ", Score: "
+                              << std::fixed << std::setprecision(2)
+                              << catalog[i].score << ")\n";
+                }
+            }
+
+            // Print summary
+            std::cout << "\nFound " << matchCount << " book(s) matching \""
+                      << word << "\".\n";
+            std::cout << "Total KMP comparisons across all titles: "
+                      << totalComparisons << "\n";
+        }
+
+        // ---- DESK OPTION 2: Find a book by ID (MergeSort + Binary Search) ----
+        else if (deskChoice == 2) {
+            std::cout << "\nEnter book ID to find: ";
+            int findId = -1;
+
+            // Validate that the user typed a number
+            if (!(std::cin >> findId)) {
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
+                std::cout << "Please enter a valid integer ID.\n";
+                continue;
+            }
+
+            // Make a copy sorted by ID so binary search works
+            std::vector<Document> sorted = catalog;
+            Metrics mSort;
+            mergeSort(sorted, mSort, DocumentIdAsc());
+
+            // Run iterative binary search on the sorted copy
+            Metrics mSearch;
+            int foundIdx = binarySearchDocumentById(sorted, findId, false, mSearch);
+
+            if (foundIdx < 0) {
+                // Not found
+                std::cout << "Book with ID " << findId << " not found.\n";
+            } else {
+                // Print the book we found
+                std::cout << "\nFound book:\n";
+                std::cout << "  ID:    " << sorted[foundIdx].id << "\n";
+                std::cout << "  Title: " << sorted[foundIdx].title << "\n";
+                std::cout << "  Year:  " << sorted[foundIdx].year << "\n";
+                std::cout << "  Score: " << std::fixed << std::setprecision(2)
+                          << sorted[foundIdx].score << "\n";
+                // Print keywords
+                std::cout << "  Keywords:";
+                for (int k = 0; k < static_cast<int>(sorted[foundIdx].keywords.size()); k++) {
+                    std::cout << " " << sorted[foundIdx].keywords[k];
+                }
+                std::cout << "\n";
+            }
+            std::cout << "Binary search comparisons: " << mSearch.comparisons << "\n";
+        }
+
+        // ---- DESK OPTION 3: Show top N books by score (MergeSort) ----
+        else if (deskChoice == 3) {
+            std::cout << "\nHow many top books? (1-50): ";
+            int topN = 0;
+
+            // Validate that the user typed a number in range
+            if (!(std::cin >> topN)) {
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
+                std::cout << "Please enter a number between 1 and 50.\n";
+                continue;
+            }
+            if (topN < 1 || topN > 50) {
+                std::cout << "N must be between 1 and 50.\n";
+                continue;
+            }
+
+            // Make a copy sorted by score descending
+            std::vector<Document> byScore = catalog;
+            Metrics mSort;
+            mergeSort(byScore, mSort, DocumentScoreDesc());
+
+            std::cout << "\nTop " << topN << " books by relevance score:\n";
+            // Print the top N entries
+            for (int i = 0; i < topN && i < static_cast<int>(byScore.size()); i++) {
+                std::cout << "  " << (i + 1) << ". [ID " << byScore[i].id
+                          << "] \"" << byScore[i].title
+                          << "\" (Score: " << std::fixed << std::setprecision(2)
+                          << byScore[i].score << ")\n";
+            }
+        }
+
+        // ---- DESK OPTION 4: Recommend books similar to a book ID ----
+        else if (deskChoice == 4) {
+            std::cout << "\nEnter book ID to get recommendations for: ";
+            int recId = -1;
+
+            // Validate input
+            if (!(std::cin >> recId)) {
+                std::cin.clear();
+                std::cin.ignore(10000, '\n');
+                std::cout << "Please enter a valid integer ID.\n";
+                continue;
+            }
+
+            // Sort catalog copy by ID and binary search for the chosen book
+            std::vector<Document> sorted = catalog;
+            Metrics mSort;
+            mergeSort(sorted, mSort, DocumentIdAsc());
+
+            Metrics mSearch;
+            int srcIdx = binarySearchDocumentById(sorted, recId, false, mSearch);
+
+            if (srcIdx < 0) {
+                std::cout << "Book with ID " << recId << " not found.\n";
+                continue;
+            }
+
+            // The source book we want to find similar books for
+            std::cout << "\nFinding books similar to: [ID " << sorted[srcIdx].id
+                      << "] \"" << sorted[srcIdx].title << "\"\n";
+
+            // Build a list of recommendation entries for every other book
+            std::vector<RecommendEntry> recs;
+
+            for (int i = 0; i < static_cast<int>(sorted.size()); i++) {
+                // Skip the source book itself
+                if (i == srcIdx) continue;
+
+                // Count shared keywords between source and this book
+                int shared = 0;
+                for (int a = 0; a < static_cast<int>(sorted[srcIdx].keywords.size()); a++) {
+                    for (int b = 0; b < static_cast<int>(sorted[i].keywords.size()); b++) {
+                        if (sorted[srcIdx].keywords[a] == sorted[i].keywords[b]) {
+                            shared++;
+                            break; // count each source keyword at most once
+                        }
+                    }
+                }
+
+                // Compute LCS (Longest Common Subsequence) of the two titles
+                Metrics mLCS;
+                LCSResult lcsRes = longestCommonSubsequence(
+                    sorted[srcIdx].title, sorted[i].title, mLCS);
+
+                // Recommendation score formula:
+                //   score = 2 * (shared keywords) + (LCS length) / 5
+                int recScore = 2 * shared + lcsRes.length / 5;
+
+                // Build the entry and add it to our list
+                RecommendEntry entry;
+                entry.bookIndex = i;
+                entry.score = recScore;
+                entry.sharedKeywords = shared;
+                recs.push_back(entry);
+            }
+
+            // Sort recommendations by score descending using mergeSort
+            Metrics mRecSort;
+            mergeSort(recs, mRecSort, RecommendScoreDesc());
+
+            // Print top 5 recommendations
+            int showCount = 5;
+            if (static_cast<int>(recs.size()) < showCount) {
+                showCount = static_cast<int>(recs.size());
+            }
+
+            std::cout << "\nTop " << showCount << " recommendations:\n";
+            for (int i = 0; i < showCount; i++) {
+                int idx = recs[i].bookIndex;
+                std::cout << "  " << (i + 1) << ". [ID " << sorted[idx].id
+                          << "] \"" << sorted[idx].title
+                          << "\" (Score: " << recs[i].score
+                          << ", Shared keywords: " << recs[i].sharedKeywords
+                          << ")\n";
+            }
+
+            std::cout << "\nFormula: score = 2 * (shared keywords) + (LCS title length) / 5\n";
+        }
+
+        // deskChoice == 0 falls through and exits the while loop
+    }
+
+    std::cout << "Returning to main menu.\n";
+}
+
 // ===== INTERACTIVE MENU =====
 
-// WHAT:    Prints the interactive menu options 0 to 9 to standard output
-// IDEA:    Displays numbered choices corresponding to scenarios, algorithm families, dataset export, and exit.
+// WHAT:    Prints the interactive menu options 0 to 10 to standard output
+// IDEA:    Displays numbered choices corresponding to scenarios, algorithm families, dataset export, library desk, and exit.
 // EXAMPLE: printMenu() -> displays menu prompt
 // TIME:    O(1)                     SPACE: O(1)
 // VIVA:    Examiner asks: "Which option exports data?"
@@ -429,9 +729,10 @@ void printMenu() {
     std::cout << " 7. Dynamic Programming Demo (Knapsack, Matrix Chain, LCS, OBST, Bellman, TSP)\n";
     std::cout << " 8. Backtracking, Flow, CRT & String Matching Demo\n";
     std::cout << " 9. Export Sample Datasets to data/\n";
+    std::cout << "10. Library Desk (search, find, top books, recommend)\n";
     std::cout << " 0. Exit\n";
     std::cout << "----------------------------------------------------------------------\n";
-    std::cout << "Enter selection [0-9]: ";
+    std::cout << "Enter selection [0-10]: ";
 }
 
 } // namespace dls
@@ -545,11 +846,14 @@ int main(int argc, char* argv[]) {
                                  : "Failed to export documents.\n");
                 break;
             }
+            case 10:
+                dls::runLibraryDesk();
+                break;
             case 0:
                 std::cout << "Exiting DLS Engine. Goodbye!\n";
                 break;
             default:
-                std::cout << "Invalid choice! Please select 0-9.\n";
+                std::cout << "Invalid choice! Please select 0-10.\n";
                 break;
         }
     }
