@@ -245,9 +245,17 @@ This document is your complete, zero-fluff study guide for tomorrow's 8-minute p
 ctest --test-dir build --output-on-failure
 ```
 
+### Interactive Menu Options (`./build/dls_app`)
+* `1`: Scenario 1: Normal Library Operation
+* `2`: Scenario 2: Constraint Shock (Budget Cut & Capacity Drop)
+* `3`: Scenario 3: Stress Test (100,000+ Items)
+* `4`: Library Desk (search, find, top books, recommend)
+* `5`: Export Sample Books to data/
+* `0`: Exit
+
 ---
 
-## 7. Library Desk (Menu Option 10)
+## 6. Library Desk (Menu Option 4)
 
 The Library Desk is an interactive sub-menu that simulates a real library terminal. It reuses existing algorithms—no new algorithms were written.
 
@@ -263,8 +271,8 @@ The Library Desk is an interactive sub-menu that simulates a real library termin
 ### Sample Run
 
 ```text
-# Start the program and select option 10 (Library Desk)
-printf "10\n1\nalgorithms\n2\n145\n3\n5\n4\n145\n0\n0\n" | ./build/dls_app
+# Start the program and select option 4 (Library Desk)
+printf "4\n1\nalgorithms\n2\n145\n3\n5\n4\n145\n0\n0\n" | ./build/dls_app
 
 # Option 1: Search "algorithms" -> finds books with "algorithms" in the title
 #   Shows each matching book's ID, title, year, and score.
@@ -295,7 +303,7 @@ printf "10\n1\nalgorithms\n2\n145\n3\n5\n4\n145\n0\n0\n" | ./build/dls_app
 
 ---
 
-## 8. Honest Limitations & How to Address Them
+## 7. Honest Limitations & How to Address Them
 
 If the examiner asks about limitations of this project, give these honest, professional answers:
 

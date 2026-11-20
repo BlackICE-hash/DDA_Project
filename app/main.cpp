@@ -8,7 +8,7 @@
 //
 // COMMAND-LINE MODES:
 // 1. No arguments: "./build/dls_app"
-//    -> Runs the interactive menu loop, presenting options 0 to 9 to the user.
+//    -> Runs the interactive menu loop, presenting options 0 to 5 to the user.
 // 2. Automated complete demo: "./build/dls_app --all" or "./build/dls_app --demo"
 //    -> Sequentially runs Scenario 1 (Normal Operation), Scenario 2 (Constraint Shock),
 //       and Scenario 3 (Stress Test), then exits with code 0.
@@ -710,29 +710,24 @@ void runLibraryDesk() {
 
 // ===== INTERACTIVE MENU =====
 
-// WHAT:    Prints the interactive menu options 0 to 10 to standard output
-// IDEA:    Displays numbered choices corresponding to scenarios, algorithm families, dataset export, library desk, and exit.
+// WHAT:    Prints the interactive menu options 0 to 5 to standard output
+// IDEA:    Displays numbered choices corresponding to scenarios, library desk, dataset export, and exit.
 // EXAMPLE: printMenu() -> displays menu prompt
 // TIME:    O(1)                     SPACE: O(1)
 // VIVA:    Examiner asks: "Which option exports data?"
-//          Answer: Option 9 exports 100 documents to data/documents.csv.
+//          Answer: Option 5 exports 100 documents to data/documents.csv.
 void printMenu() {
     std::cout << "\n======================================================================\n";
     std::cout << "   DIGITAL LIBRARY SEARCH AND RECOMMENDATION ENGINE - CLI REGISTRY   \n";
     std::cout << "======================================================================\n";
-    std::cout << " 1. Run Scenario 1: Normal Library Operation Demo\n";
-    std::cout << " 2. Run Scenario 2: Constraint Shock (Budget Cut & Capacity Drop)\n";
-    std::cout << " 3. Run Scenario 3: Stress Test (100,000+ Items)\n";
-    std::cout << " 4. Sorting & Search Demo (MergeSort, QuickSort, BinarySearch)\n";
-    std::cout << " 5. Divide & Conquer Demo (Max Subarray, Fast Power, Celebrity, Strassen)\n";
-    std::cout << " 6. Greedy Demo (Activity Selection, Interval Partition, Huffman, Dijkstra, MST)\n";
-    std::cout << " 7. Dynamic Programming Demo (Knapsack, Matrix Chain, LCS, OBST, Bellman, TSP)\n";
-    std::cout << " 8. Backtracking, Flow, CRT & String Matching Demo\n";
-    std::cout << " 9. Export Sample Datasets to data/\n";
-    std::cout << "10. Library Desk (search, find, top books, recommend)\n";
+    std::cout << " 1. Scenario 1: Normal Library Operation\n";
+    std::cout << " 2. Scenario 2: Constraint Shock (Budget Cut & Capacity Drop)\n";
+    std::cout << " 3. Scenario 3: Stress Test (100,000+ Items)\n";
+    std::cout << " 4. Library Desk (search, find, top books, recommend)\n";
+    std::cout << " 5. Export Sample Books to data/\n";
     std::cout << " 0. Exit\n";
     std::cout << "----------------------------------------------------------------------\n";
-    std::cout << "Enter selection [0-10]: ";
+    std::cout << "Enter selection [0-5]: ";
 }
 
 } // namespace dls
@@ -770,8 +765,15 @@ int main(int argc, char* argv[]) {
     while (choice != 0) {
         dls::printMenu();
         if (!(std::cin >> choice)) {
-            // EOF or piped input ended
-            break;
+            if (std::cin.eof()) {
+                // EOF or piped input ended
+                break;
+            }
+            std::cin.clear();
+            std::cin.ignore(10000, '\n');
+            std::cout << "Invalid choice! Please select 0-5.\n";
+            choice = -1;
+            continue;
         }
 
         switch (choice) {
@@ -784,61 +786,10 @@ int main(int argc, char* argv[]) {
             case 3:
                 dls::runScenario3_StressTest();
                 break;
-            case 4: {
-                dls::printHeader("Sorting & Binary Search Demo");
-                auto docs = dls::DataGenerator::generateDocuments(50, 42);
-                dls::Metrics m;
-                dls::mergeSort(docs, m, dls::DocumentScoreDesc());
-                dls::printMetrics("MergeSort 50 Docs", m, "O(n)");
-                std::cout << "Top document: [ID " << docs[0].id << "] " << docs[0].title 
-                          << " (Score: " << docs[0].score << ")\n";
+            case 4:
+                dls::runLibraryDesk();
                 break;
-            }
             case 5: {
-                dls::printHeader("Divide and Conquer Demo");
-                dls::Metrics mDC, mFast;
-                auto log = dls::DataGenerator::generateActivityLog(50, 42);
-                auto res = dls::maxSubarrayDivideAndConquer(log, mDC);
-                dls::printMetrics("Max Subarray D&C", mDC, "O(log n) stack");
-                std::cout << "Peak window sum: " << res.sum << "\n";
-                int64_t powRes = dls::fastPowerModular(3, 100, 1000000007, mFast);
-                dls::printMetrics("Fast Powering 3^100 mod 1e9+7", mFast, "O(1)");
-                std::cout << "Result: " << powRes << "\n";
-                break;
-            }
-            case 6: {
-                dls::printHeader("Greedy Algorithms Demo");
-                dls::Metrics m;
-                std::string txt = "digital library system algorithms";
-                auto huff = dls::huffmanEncode(txt, m);
-                dls::printMetrics("Huffman Encoding", m, "O(k) tree");
-                std::cout << "Raw: " << txt.size() * 8 << " bits, Encoded: " << huff.encodedBits.size() << " bits\n";
-                break;
-            }
-            case 7: {
-                dls::printHeader("Dynamic Programming Demo");
-                dls::Metrics mKnap, mLCS;
-                auto items = dls::DataGenerator::generateItems(10, 20, 50, 42);
-                auto knap = dls::knapsack01(items, 50, mKnap);
-                dls::printMetrics("0/1 Knapsack DP", mKnap, "O(nW)");
-                std::cout << "Max value: " << knap.maxValue << "\n";
-                auto lcs = dls::longestCommonSubsequence("ALGORITHM", "LOGARITHM", mLCS);
-                dls::printMetrics("LCS (\"ALGORITHM\", \"LOGARITHM\")", mLCS, "O(mn)");
-                std::cout << "LCS: \"" << lcs.sequence << "\" (length " << lcs.length << ")\n";
-                break;
-            }
-            case 8: {
-                dls::printHeader("Backtracking, Flow, CRT & Strings Demo");
-                dls::Metrics mQ, mFlow, mCRT;
-                auto nq = dls::solveNQueens(8, mQ);
-                dls::printMetrics("N-Queens (N=8)", mQ, "O(N)");
-                std::cout << "Solutions: " << nq.totalSolutions << "\n";
-                auto crt = dls::solveCRT({2, 3, 2}, {3, 5, 7}, mCRT);
-                dls::printMetrics("CRT (2 mod 3, 3 mod 5, 2 mod 7)", mCRT, "O(1)");
-                std::cout << "Solution: " << crt.solution << " mod " << crt.moduloProduct << "\n";
-                break;
-            }
-            case 9: {
                 dls::printHeader("Exporting Sample Datasets to data/...");
                 auto sampleDocs = dls::DataGenerator::generateDocuments(100, 42);
                 bool ok = dls::DataGenerator::exportDocumentsToCSV("data/documents.csv", sampleDocs);
@@ -846,14 +797,11 @@ int main(int argc, char* argv[]) {
                                  : "Failed to export documents.\n");
                 break;
             }
-            case 10:
-                dls::runLibraryDesk();
-                break;
             case 0:
                 std::cout << "Exiting DLS Engine. Goodbye!\n";
                 break;
             default:
-                std::cout << "Invalid choice! Please select 0-10.\n";
+                std::cout << "Invalid choice! Please select 0-5.\n";
                 break;
         }
     }

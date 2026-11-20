@@ -79,16 +79,11 @@ Launch the interactive command menu:
 ./build/dls_app
 ```
 Menu options include:
-* `1`: Run Scenario 1: Normal Digital Library Operation
-* `2`: Run Scenario 2: Constraint Shock (Budget Cut & Fiber Cut)
-* `3`: Run Scenario 3: Stress Test (100,000+ Items)
-* `4`: Sorting & Search Demo (MergeSort, QuickSort, BinarySearch)
-* `5`: Divide & Conquer Demo (Max Subarray, Fast Power, Celebrity, Strassen)
-* `6`: Greedy Demo (Activity Selection, Interval Partition, Huffman, Dijkstra, MST)
-* `7`: Dynamic Programming Demo (Knapsack, Matrix Chain, LCS, OBST, Bellman, TSP)
-* `8`: Backtracking, Flow, CRT & String Matching Demo
-* `9`: Export Sample Datasets to `data/documents.csv`
-* `10`: Library Desk (search titles, find by ID, top N books, recommend similar books)
+* `1`: Scenario 1: Normal Library Operation
+* `2`: Scenario 2: Constraint Shock (Budget Cut & Capacity Drop)
+* `3`: Scenario 3: Stress Test (100,000+ Items)
+* `4`: Library Desk (search, find, top books, recommend)
+* `5`: Export Sample Books to `data/documents.csv`
 * `0`: Exit
 
 ### 2. Automated CLI Modes (`--all`, `--scenario`)
@@ -111,7 +106,7 @@ Run the standalone benchmarking binary to evaluate execution times, comparison c
 This automatically updates and exports telemetry to `data/benchmark_results.csv`.
 
 ### 4. Exporting Data to CSV
-* **Catalog Records**: Choose option `9` in the interactive menu or run `printf "9\n0\n" | ./build/dls_app` to generate `data/documents.csv`.
+* **Catalog Records**: Choose option `5` in the interactive menu or run `printf "5\n0\n" | ./build/dls_app` to generate `data/documents.csv`.
 * **Benchmark Metrics**: Running `./build/dls_bench` exports results to `data/benchmark_results.csv`.
 
 ---
